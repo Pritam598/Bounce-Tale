@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Bounce Tales: Hazards Edition</title>
+    <style>
+        @font-face {
+            font-family: 'PixelFont';
+            src: local('Courier New'), local('Courier'), monospace;
+        }
+        
+        body {
+            background-color: #1a1a1a;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+            font-family: 'PixelFont', monospace;
+            touch-action: none;
+        }
+
+        #game-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            aspect-ratio: 4/3;
+            background: #000;
+            border: 4px solid #444;
+            box-shadow: 0 0 50px rgba(0,0,0,0.8);
+        }
+
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+            image-rendering: pixelated; 
+            image-rendering: crisp-edges;
+        }
+
+        #ui {
+            position: absolute;
+            top: 5px; left: 5px; right: 5px;
+            display: flex; justify-content: space-between;
+            color: #fff; font-size: 14px; font-weight: bold;
+            text-shadow: 2px 2px 0 #000; pointer-events: none; z-index: 5;
+        }
+
+        #overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.85);
+            display: flex; flex-direction: column;
+            justify-content: center; align-items: center;
+            color: white; z-index: 10;
+        }
+        
+        h1 { font-size: 32px; color: #ff3333; text-shadow: 3px 3px 0 #330000; margin: 0 0 10px 0; text-align: center; }
+        p { margin-bottom: 20px; color: #ddd; text-align: center; font-size: 14px; max-width: 80%; line-height: 1.5; }
+
+        button {
+            background: #ffcc00; border: 2px solid #fff;
+            padding: 10px 20px; font-family: inherit; font-size: 18px;
+            font-weight: bold; color: #331a00; cursor: pointer;
+            box-shadow: 0 4px 0 #b38f00; margin-top: 10px;
+        }
+        button:active { transform: translateY(4px); box-shadow: none; }
+
+        #mobile-controls {
+            position: absolute; bottom: 20px; left: 0; width: 100%; height: 120px;
+            display: none; pointer-events: none; z-index: 15;
+        }
+        .d-pad { position: absolute; bottom: 10px; left: 20px; width: 120px; height: 80px; pointer-events: auto; }
+        .action-btn { position: absolute; bottom: 20px; right: 20px; width: 70px; height: 70px; background: rgba(255,255,255,0.2); border: 2px solid white; border-radius: 50%; pointer-events: auto; }
+        .arrow { width: 50px; height: 50px; background: rgba(255,255,255,0.2); border: 2px solid white; position: absolute; display: flex; justify-content: center; align-items: center; font-size: 24px; color: white; user-select: none; }
+        .arrow:active, .action-btn:active { background: rgba(255,255,255,0.5); }
+        .left { left: 0; top: 15px; } .right { right: 0; top: 15px; }
+
+        @media (max-width: 800px) {
+            #mobile-controls { display: block; }
+            #game-container { width: 100vw; height: 100vh; max-width: none; border: none; }
+        }
+    </style>
+</head>
+<body>
+
+<div id="game-container">
+    <canvas id="gameCanvas" width="320" height="240"></canvas>
+    
+    <div id="ui">
+        <div>SCORE: <span id="scoreVal">0</span></div>
+        <div id="levelDisplay">CHAPTER 1</div>
+    </div>
+
+    <div id="overlay">
+        <h1 id="overlay-title">BOUNCE<br>TALES</h1>
+        <p id="overlay-msg">
+            <span style="color:#76ff03">ARROWS</span> to Move & Jump.<br>
+            Avoid <span style="color:#f00">Spikes</span>, <span style="color:#00bcd4">Water</span> & <span style="color:#ff4081">Enemies</span>!
+        </p>
+        <button id="overlay-btn" onclick="handleOverlayClick()">START GAME</button>
+    </div>
+
+    <div id="mobile-controls">
+        <div class="d-pad">
+            <div class="arrow left" id="btn-left">‹</div>
+            <div class="arrow right" id="btn-right">›</div>
+        </div>
+        <div class="action-btn" id="btn-jump"></div>
+    </div>
+</div>
+
+<script>
+/** BOUNCE TALES: HAZARDS EDITION */
+
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+
+// --- ASSETS GENERATION ---
+function createTexture(w, h, drawFn) {
+    const c = document.createElement('canvas');
+    c.width = w; c.height = h;
+    const x = c.getContext('2d');
+    drawFn(x, w, h);
+    return c;
+}
+
+const ballSprite = createTexture(32, 32, (c, w, h) => {
+    let cx = w/2, cy = h/2, r = w/2 - 1;
+    let g = c.createRadialGradient(cx-4, cy-4, 2, cx, cy, r);
+    g.addColorStop(0, '#ff5e5e'); g.addColorStop(1, '#b30000');
+    c.fillStyle = g; c.beginPath(); c.arc(cx, cy, r, 0, Math.PI*2); c.fill();
+    c.strokeStyle = '#800000'; c.lineWidth = 3;
+    c.beginPath(); c.moveTo(cx, cy-r); c.lineTo(cx, cy+r); c.stroke();
+    c.beginPath(); c.moveTo(cx-r, cy); c.lineTo(cx+r, cy); c.stroke();
+    c.fillStyle = 'white'; c.beginPath(); c.arc(cx-6, cy-6, 4, 0, Math.PI*2); c.fill();
+    c.strokeStyle = '#330000'; c.lineWidth = 1; c.beginPath(); c.arc(cx, cy, r, 0, Math.PI*2); c.stroke();
+});
+
+const tileSprite = createTexture(20, 20, (c, w, h) => {
+    c.fillStyle = '#6d4c41'; c.fillRect(0, 0, w, h);
+    c.fillStyle = '#76ff03'; c.fillRect(0, 0, w, 6);
+    c.fillStyle = '#33691e'; c.fillRect(0, 6, w, 2);
+    c.fillStyle = '#5d4037'; c.fillRect(5, 10, 2, 2); c.fillRect(15, 14, 2, 2);
+});
+
+// Water Tile (Animated logic handled in draw, this is base texture)
+const waterSprite = createTexture(20, 20, (c, w, h) => {
+    c.fillStyle = '#0277bd'; c.fillRect(0, 0, w, h);
+    c.fillStyle = '#4fc3f7'; c.fillRect(0, 0, w, 4); // Surface
+    c.fillStyle = 'rgba(255,255,255,0.3)'; c.fillRect(2, 5, 5, 2); c.fillRect(12, 10, 4, 2);
+});
+
+// Enemy Sprite (Angry Block)
+const enemySprite = createTexture(24, 24, (c, w, h) => {
+    c.fillStyle = '#d32f2f'; c.fillRect(0, 0, w, h);
+    c.strokeStyle = '#8b0000'; c.lineWidth = 2; c.strokeRect(0,0,w,h);
+    // Eyes
+    c.fillStyle = '#fff'; c.fillRect(4, 5, 6, 6); c.fillRect(14, 5, 6, 6);
+    c.fillStyle = '#000'; c.fillRect(6, 7, 2, 2); c.fillRect(16, 7, 2, 2);
+    // Eyebrows
+    c.strokeStyle = '#000'; c.lineWidth = 2;
+    c.beginPath(); c.moveTo(3, 4); c.lineTo(10, 8); c.stroke();
+    c.beginPath(); c.moveTo(21, 4); c.lineTo(14, 8); c.stroke();
+});
+
+const treeSprite = createTexture(60, 100, (c, w, h) => {
+    c.fillStyle = '#5D4037'; c.fillRect(25, 60, 10, 40);
+    c.fillStyle = '#2E7D32';
+    c.beginPath(); c.moveTo(10, 70); c.lineTo(30, 20); c.lineTo(50, 70); c.fill();
+    c.beginPath(); c.moveTo(10, 50); c.lineTo(30, 5); c.lineTo(50, 50); c.fill();
+});
+
+const flagSprite = createTexture(20, 40, (c, w, h) => {
+    c.fillStyle = '#8B4513'; c.fillRect(2, 0, 4, 40);
+    c.fillStyle = '#FF0000'; c.beginPath(); c.moveTo(6, 2); c.lineTo(18, 10); c.lineTo(6, 18); c.fill();
+});
+
+// --- CONSTANTS ---
+const TILE_SIZE = 20;
+const GRAVITY = 0.35;
+const JUMP_FORCE = -9.5;
+const ACCEL = 0.3;
+const FRICTION = 0.9;
+const MAX_SPEED = 4.5;
+
+// --- STATE ---
+let gameState = 'MENU';
+let currentLevelIndex = 0;
+let camera = { x: 0, y: 0 };
+let score = 0;
+let globalTime = 0;
+let keys = { left: false, right: false, up: false };
+
+// --- LEVELS ---
+// Key: S=Start, #=Grass, ~=Water, ^=Spike, 3=Coin, E=Enemy, 9=Flag
+const levels = [
+    // 1. Tutorial
+    [
+        "................................................................",
+        "................................................................",
+        "................................................................",
+        ".................3...3..........................................",
+        ".................#####...3......................................",
+        "........S........#...#..###.........3.3................9........",
+        ".......###.......#...#..............###..............###........",
+        "#######...#######.....######....################.....#.#........"
+    ],
+    // 2. Water Hazard
+    [
+        "................................................................",
+        "................................................................",
+        "...................3.3................3.3.......................",
+        "..................#####...............###.......................",
+        "..................#...#...............#.#.......................",
+        ".....S............#...#.....3.3.......#.#.........9.............",
+        "....###......##...#...#....#####......#.#........###............",
+        "####...######~~###.....####~~~~~######...########...############"
+    ],
+    // 3. Spikes and Heights
+    [
+        "................................................................",
+        "................3.3.............................................",
+        "...............#####.......3..3.................................",
+        ".......................##..####.................................",
+        "..................###..##..#..#.................................",
+        ".....S.......###..###..##..#..#........3..3...............9.....",
+        "....###......###..###..##..#..#..^^...######.............###....",
+        "####...##############################.......#############...####"
+    ],
+    // 4. Enemy Patrols
+    [
+        "................................................................",
+        "................................................................",
+        "......................................................3...3.....",
+        ".....................................................###.###....",
+        "...................E.............3...................#.#.#.#....",
+        ".....S......3.....####......3...###..........3.......#.#.#.#.9..",
+        "....###....###.............###..........^...###..^...#.#.#.#.##.",
+        "####...####...#####...#####...###...####^###...##^###........... "
+    ],
+    // 5. The Gauntlet
+    [
+        "................................................................................",
+        "................................................................................",
+        "....................................................3.3.3.......................",
+        "...................................................#######......................",
+        "..................3................................#.....#......................",
+        ".....S...........###........3......E....3.....E....#.....#........9.............",
+        "....###....^.....#.#.......###...#####.###...#####.#.....#.......###............",
+        "####...####^#####...#######...###.....#...###.....#.......#######...############",
+        "...........~..................~.......~...~.......~............................."
+    ]
+];
+
+let player = { x: 0, y: 0, radius: 9, vx: 0, vy: 0, angle: 0, onGround: false, dead: false };
+let tiles = [];
+let water = [];
+let coins = [];
+let spikes = [];
+let enemies = []; // {x, y, vx, minX, maxX}
+let goal = null;
+let startPos = {x:0, y:0};
+
+function parseLevel(idx) {
+    tiles=[]; water=[]; coins=[]; spikes=[]; enemies=[]; goal=null;
+    let map = levels[idx];
+    if(!map) return;
+
+    for(let r=0; r<map.length; r++) {
+        for(let c=0; c<map[r].length; c++) {
+            let ch = map[r][c];
+            let x = c * TILE_SIZE;
+            let y = r * TILE_SIZE + 60; // Offset down
+
+            if(ch==='#') tiles.push({x, y});
+            if(ch==='~') water.push({x, y});
+            if(ch==='S') { player.x = x+10; player.y = y; startPos = {x:x+10, y:y}; }
+            if(ch==='3') coins.push({x: x+10, y: y+10, active: true});
+            if(ch==='^') spikes.push({x: x, y: y});
+            if(ch==='9') goal = {x: x, y: y};
+            
+            // Enemy: Create logic
+            if(ch==='E') {
+                // Enemies patrol the platform they are on.
+                // We scan left and right to find edges of the platform.
+                let minC = c; while(map[r][minC-1] === '#' || map[r][minC-1] === 'E') minC--;
+                let maxC = c; while(map[r][maxC+1] === '#' || map[r][maxC+1] === 'E') maxC++;
+                
+                enemies.push({
+                    x: x + 12, y: y + 12 - 4, // Center on tile, shift up slightly
+                    vx: 1.5,
+                    minX: minC * TILE_SIZE,
+                    maxX: (maxC + 1) * TILE_SIZE
+                });
+                
+                // Add a floor tile under the enemy so they don't fall in the map data
+                tiles.push({x, y});
+            }
+        }
+    }
+}
+
+function updatePhysics() {
+    if(player.dead) return;
+
+    // Player Movement
+    if (keys.left) player.vx -= ACCEL;
+    if (keys.right) player.vx += ACCEL;
+    player.vx *= FRICTION;
+    
+    // Limits
+    if(player.vx > MAX_SPEED) player.vx = MAX_SPEED;
+    if(player.vx < -MAX_SPEED) player.vx = -MAX_SPEED;
+
+    player.angle += player.vx * 0.15;
+    player.x += player.vx;
+    checkTileCollision('x');
+
+    player.vy += GRAVITY;
+    if(keys.up && player.onGround) {
+        player.vy = JUMP_FORCE;
+        player.onGround = false;
+    }
+
+    player.y += player.vy;
+    player.onGround = false;
+    checkTileCollision('y');
+
+    if(player.y > 400) killPlayer("You fell!");
+
+    // Enemy Logic
+    enemies.forEach(e => {
+        e.x += e.vx;
+        // Turn around at patrol limits
+        if(e.x < e.minX + 12 || e.x > e.maxX - 12) e.vx *= -1;
+        
+        // Simple Collision with Player (Circle vs Box)
+        // Enemy is roughly 24x24 centered at e.x, e.y
+        if(Math.abs(player.x - e.x) < 18 && Math.abs(player.y - e.y) < 18) {
+            killPlayer("Caught by an enemy!");
+        }
+    });
+
+    checkEntities();
+}
+
+function checkTileCollision(axis) {
+    let left = Math.floor((player.x - player.radius) / TILE_SIZE);
+    let right = Math.floor((player.x + player.radius) / TILE_SIZE);
+    let top = Math.floor((player.y - player.radius) / TILE_SIZE);
+    let bottom = Math.floor((player.y + player.radius + 10) / TILE_SIZE);
+
+    for(let t of tiles) {
+        if (player.x + player.radius > t.x && player.x - player.radius < t.x + TILE_SIZE &&
+            player.y + player.radius > t.y && player.y - player.radius < t.y + TILE_SIZE) {
+            
+            if(axis === 'x') {
+                if(player.vx > 0) player.x = t.x - player.radius - 0.1;
+                if(player.vx < 0) player.x = t.x + TILE_SIZE + player.radius + 0.1;
+                player.vx = 0;
+            } else {
+                if(player.vy > 0) { 
+                    player.y = t.y - player.radius - 0.1;
+                    player.onGround = true;
+                    player.vy = 0;
+                } else if (player.vy < 0) { 
+                    player.y = t.y + TILE_SIZE + player.radius + 0.1;
+                    player.vy = 0;
+                }
+            }
+        }
+    }
+}
+
+function checkEntities() {
+    // Coins
+    coins.forEach(c => {
+        if(!c.active) return;
+        if((player.x-c.x)**2 + (player.y-c.y)**2 < 200) { 
+            c.active = false; score += 10;
+            document.getElementById('scoreVal').innerText = score;
+        }
+    });
+
+    // Spikes (Sharp Hitbox)
+    for(let s of spikes) {
+        // Spike is triangle bottom center. Hitbox is smaller than full tile.
+        if(player.x > s.x + 5 && player.x < s.x + 15 &&
+           player.y > s.y + 10 && player.y < s.y + 20) {
+            killPlayer("Spiked!");
+        }
+    }
+
+    // Water
+    for(let w of water) {
+        // Hit water surface (top 5 pixels of tile)
+        if (player.x + 5 > w.x && player.x - 5 < w.x + 20 &&
+            player.y + 9 > w.y && player.y - 9 < w.y + 20) {
+                killPlayer("You drowned!");
+        }
+    }
+
+    // Goal
+    if(goal) {
+        if((player.x - (goal.x+10))**2 + (player.y - (goal.y+20))**2 < 400) {
+            completeLevel();
+        }
+    }
+}
+
+function killPlayer(reason) {
+    if(player.dead) return;
+    player.dead = true;
+    player.vx = 0; player.vy = -5;
+    setTimeout(() => {
+        showOverlay("GAME OVER", reason, "TRY AGAIN");
+    }, 500);
+}
+
+function completeLevel() {
+    gameState = 'WIN_LEVEL';
+    if(currentLevelIndex >= levels.length - 1) {
+        showOverlay("VICTORY!", "You beat all 5 Chapters!<br>Final Score: " + score, "PLAY AGAIN");
+        gameState = 'GAME_COMPLETE';
+    } else {
+        showOverlay("CHAPTER CLEARED!", "Score: " + score, "NEXT CHAPTER");
+    }
+}
+
+function draw() {
+    globalTime++;
+    // Sky
+    ctx.fillStyle = '#87CEEB'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    if (gameState === 'MENU') return;
+
+    // Camera
+    let targetX = player.x - canvas.width / 2;
+    if(targetX < 0) targetX = 0;
+    camera.x += (targetX - camera.x) * 0.1;
+
+    ctx.save();
+    ctx.translate(-Math.floor(camera.x), 0); 
+
+    // Decor Trees
+    for(let i=0; i<30; i++) ctx.drawImage(treeSprite, i * 150, 160); 
+
+    // Tiles
+    tiles.forEach(t => {
+        if(t.x > camera.x - 30 && t.x < camera.x + 350) ctx.drawImage(tileSprite, t.x, t.y);
+    });
+
+    // Water (Animated)
+    let wave = Math.sin(globalTime/10) * 2;
+    water.forEach(w => {
+        if(w.x > camera.x - 30 && w.x < camera.x + 350) {
+            ctx.drawImage(waterSprite, w.x, w.y + (wave>0?1:0)); 
+        }
+    });
+
+    // Spikes
+    ctx.fillStyle = '#444';
+    spikes.forEach(s => {
+        if(s.x > camera.x - 30 && s.x < camera.x + 350) {
+            ctx.beginPath();
+            ctx.moveTo(s.x + 2, s.y + 20);
+            ctx.lineTo(s.x + 10, s.y + 2); // Sharp top
+            ctx.lineTo(s.x + 18, s.y + 20);
+            ctx.fill();
+            // Metallic shine
+            ctx.fillStyle = '#888'; ctx.beginPath(); ctx.moveTo(s.x+10,s.y+2); ctx.lineTo(s.x+14,s.y+20); ctx.lineTo(s.x+6,s.y+20); ctx.fill(); ctx.fillStyle='#444';
+        }
+    });
+
+    // Enemies
+    enemies.forEach(e => {
+        if(e.x > camera.x - 30 && e.x < camera.x + 350) {
+            // Draw enemy centered
+            ctx.drawImage(enemySprite, e.x - 12, e.y - 12);
+        }
+    });
+
+    // Goal
+    if(goal) ctx.drawImage(flagSprite, goal.x, goal.y - 20);
+
+    // Coins
+    coins.forEach(c => {
+        if(c.active) {
+            ctx.fillStyle = '#FFD700'; ctx.strokeStyle = '#B8860B'; ctx.lineWidth = 2;
+            let bounce = Math.sin(globalTime / 10) * 3;
+            ctx.beginPath(); ctx.arc(c.x, c.y + bounce, 6, 0, Math.PI*2); ctx.fill(); ctx.stroke();
+            ctx.fillStyle = '#FFF'; ctx.beginPath(); ctx.arc(c.x-2, c.y+bounce-2, 2, 0, Math.PI*2); ctx.fill();
+        }
+    });
+
+    // Player
+    ctx.save();
+    ctx.translate(player.x, player.y);
+    if(player.dead) ctx.globalAlpha = 0.5; 
+    ctx.rotate(player.angle);
+    ctx.drawImage(ballSprite, -player.radius, -player.radius, player.radius*2, player.radius*2);
+    ctx.restore();
+
+    ctx.restore();
+}
+
+function gameLoop() {
+    if(gameState === 'PLAY') updatePhysics();
+    draw();
+    requestAnimationFrame(gameLoop);
+}
+
+// UI HANDLERS
+function showOverlay(title, msg, btnText) {
+    gameState = (gameState === 'GAME_COMPLETE' ? 'GAME_COMPLETE' : 'MENU'); // Pause
+    const ov = document.getElementById('overlay');
+    document.getElementById('overlay-title').innerHTML = title;
+    document.getElementById('overlay-msg').innerHTML = msg;
+    document.getElementById('overlay-btn').innerText = btnText;
+    ov.style.display = 'flex';
+}
+
+function handleOverlayClick() {
+    const btnText = document.getElementById('overlay-btn').innerText;
+    document.getElementById('overlay').style.display = 'none';
+
+    if(btnText === 'START GAME' || btnText === 'PLAY AGAIN') {
+        currentLevelIndex = 0; score = 0; document.getElementById('scoreVal').innerText = '0';
+        resetLevel();
+    } else if (btnText === 'TRY AGAIN') {
+        resetLevel(); // Restart current level
+    } else if (btnText === 'NEXT CHAPTER') {
+        currentLevelIndex++;
+        resetLevel();
+    }
+}
+
+function resetLevel() {
+    parseLevel(currentLevelIndex);
+    player.x = startPos.x; player.y = startPos.y;
+    player.vx = 0; player.vy = 0; player.angle = 0;
+    player.dead = false; player.onGround = false;
+    document.getElementById('levelDisplay').innerText = "CHAPTER " + (currentLevelIndex + 1);
+    gameState = 'PLAY';
+}
+
+// CONTROLS
+window.addEventListener('keydown', e => {
+    if(e.code === 'ArrowLeft') keys.left = true;
+    if(e.code === 'ArrowRight') keys.right = true;
+    if(e.code === 'ArrowUp' || e.code === 'Space') keys.up = true;
+});
+window.addEventListener('keyup', e => {
+    if(e.code === 'ArrowLeft') keys.left = false;
+    if(e.code === 'ArrowRight') keys.right = false;
+    if(e.code === 'ArrowUp' || e.code === 'Space') keys.up = false;
+});
+const addTouch = (id, k) => {
+    const el = document.getElementById(id);
+    el.addEventListener('touchstart', (e) => { e.preventDefault(); keys[k] = true; });
+    el.addEventListener('touchend', (e) => { e.preventDefault(); keys[k] = false; });
+};
+addTouch('btn-left', 'left'); addTouch('btn-right', 'right'); addTouch('btn-jump', 'up');
+
+// INIT
+gameState = 'MENU';
+gameLoop();
+
+</script>
+</body>
+</html>
