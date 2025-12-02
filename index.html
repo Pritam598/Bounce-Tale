@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Bounce Tales: Hazards Edition</title>
+    <title>Bounce Tales: Ultimate Edition</title>
     <style>
         @font-face {
             font-family: 'PixelFont';
@@ -11,7 +11,7 @@
         }
         
         body {
-            background-color: #1a1a1a;
+            background-color: #121212;
             margin: 0;
             padding: 0;
             display: flex;
@@ -23,14 +23,16 @@
             touch-action: none;
         }
 
-        #game-container {
+        #game-device {
             position: relative;
             width: 100%;
-            max-width: 600px;
-            aspect-ratio: 4/3;
-            background: #000;
-            border: 4px solid #444;
-            box-shadow: 0 0 50px rgba(0,0,0,0.8);
+            max-width: 700px; /* Wider screen */
+            aspect-ratio: 16/9;
+            background: #222;
+            border: 8px solid #444;
+            border-radius: 10px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.8);
+            overflow: hidden;
         }
 
         canvas {
@@ -38,15 +40,14 @@
             width: 100%;
             height: 100%;
             image-rendering: pixelated; 
-            image-rendering: crisp-edges;
         }
 
         #ui {
             position: absolute;
-            top: 5px; left: 5px; right: 5px;
+            top: 10px; left: 15px; right: 15px;
             display: flex; justify-content: space-between;
-            color: #fff; font-size: 14px; font-weight: bold;
-            text-shadow: 2px 2px 0 #000; pointer-events: none; z-index: 5;
+            color: #fff; font-size: 16px; font-weight: bold;
+            text-shadow: 2px 2px 0 #000; pointer-events: none; z-index: 20;
         }
 
         #overlay {
@@ -54,53 +55,62 @@
             background: rgba(0,0,0,0.85);
             display: flex; flex-direction: column;
             justify-content: center; align-items: center;
-            color: white; z-index: 10;
+            color: white; z-index: 30;
+            backdrop-filter: blur(4px);
         }
         
-        h1 { font-size: 32px; color: #ff3333; text-shadow: 3px 3px 0 #330000; margin: 0 0 10px 0; text-align: center; }
-        p { margin-bottom: 20px; color: #ddd; text-align: center; font-size: 14px; max-width: 80%; line-height: 1.5; }
+        h1 { 
+            font-size: 48px; color: #ff3333; 
+            text-shadow: 4px 4px 0 #330000; margin: 0 0 10px 0; 
+            text-transform: uppercase; letter-spacing: 2px;
+        }
+        p { margin-bottom: 30px; color: #ddd; text-align: center; font-size: 16px; line-height: 1.6; }
 
         button {
-            background: #ffcc00; border: 2px solid #fff;
-            padding: 10px 20px; font-family: inherit; font-size: 18px;
+            background: linear-gradient(to bottom, #ffeb3b, #fbc02d);
+            border: 2px solid #fff;
+            padding: 12px 30px; font-family: inherit; font-size: 20px;
             font-weight: bold; color: #331a00; cursor: pointer;
-            box-shadow: 0 4px 0 #b38f00; margin-top: 10px;
+            box-shadow: 0 6px 0 #b38f00; border-radius: 50px;
+            transition: transform 0.1s;
         }
-        button:active { transform: translateY(4px); box-shadow: none; }
+        button:active { transform: translateY(6px); box-shadow: none; }
 
+        /* Mobile Controls */
         #mobile-controls {
             position: absolute; bottom: 20px; left: 0; width: 100%; height: 120px;
-            display: none; pointer-events: none; z-index: 15;
+            display: none; pointer-events: none; z-index: 25;
         }
-        .d-pad { position: absolute; bottom: 10px; left: 20px; width: 120px; height: 80px; pointer-events: auto; }
-        .action-btn { position: absolute; bottom: 20px; right: 20px; width: 70px; height: 70px; background: rgba(255,255,255,0.2); border: 2px solid white; border-radius: 50%; pointer-events: auto; }
-        .arrow { width: 50px; height: 50px; background: rgba(255,255,255,0.2); border: 2px solid white; position: absolute; display: flex; justify-content: center; align-items: center; font-size: 24px; color: white; user-select: none; }
+        .d-pad { position: absolute; bottom: 20px; left: 30px; width: 140px; height: 90px; pointer-events: auto; }
+        .action-btn { position: absolute; bottom: 30px; right: 30px; width: 80px; height: 80px; background: rgba(255,255,255,0.2); border: 3px solid white; border-radius: 50%; pointer-events: auto; }
+        .arrow { width: 60px; height: 60px; background: rgba(255,255,255,0.2); border: 2px solid white; position: absolute; display: flex; justify-content: center; align-items: center; font-size: 30px; color: white; user-select: none; border-radius: 10px; }
         .arrow:active, .action-btn:active { background: rgba(255,255,255,0.5); }
         .left { left: 0; top: 15px; } .right { right: 0; top: 15px; }
 
         @media (max-width: 800px) {
             #mobile-controls { display: block; }
-            #game-container { width: 100vw; height: 100vh; max-width: none; border: none; }
+            #game-device { width: 100vw; height: 100vh; max-width: none; border: none; border-radius: 0; }
         }
     </style>
 </head>
 <body>
 
-<div id="game-container">
-    <canvas id="gameCanvas" width="320" height="240"></canvas>
+<div id="game-device">
+    <canvas id="gameCanvas" width="480" height="270"></canvas>
     
     <div id="ui">
-        <div>SCORE: <span id="scoreVal">0</span></div>
+        <div>COINS: <span id="scoreVal" style="color:#FFD700">0</span></div>
         <div id="levelDisplay">CHAPTER 1</div>
     </div>
 
     <div id="overlay">
-        <h1 id="overlay-title">BOUNCE<br>TALES</h1>
+        <h1 id="overlay-title">BOUNCE<br>ULTIMATE</h1>
         <p id="overlay-msg">
-            <span style="color:#76ff03">ARROWS</span> to Move & Jump.<br>
-            Avoid <span style="color:#f00">Spikes</span>, <span style="color:#00bcd4">Water</span> & <span style="color:#ff4081">Enemies</span>!
+            Explore the Massive World.<br>
+            <span style="color:#76ff03">ARROWS</span> to Move. <span style="color:#FFF">SPACE</span> to Jump.<br>
+            Jump <b>ON</b> enemies to squash them!
         </p>
-        <button id="overlay-btn" onclick="handleOverlayClick()">START GAME</button>
+        <button id="overlay-btn" onclick="handleOverlayClick()">START ADVENTURE</button>
     </div>
 
     <div id="mobile-controls">
@@ -113,7 +123,9 @@
 </div>
 
 <script>
-/** BOUNCE TALES: HAZARDS EDITION */
+/** * BOUNCE TALES: ULTIMATE EDITION 
+ * Features: Parallax Backgrounds, Particles, Massive Maps
+ */
 
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
@@ -127,55 +139,69 @@ function createTexture(w, h, drawFn) {
     return c;
 }
 
+// 1. High Detail Ball
 const ballSprite = createTexture(32, 32, (c, w, h) => {
     let cx = w/2, cy = h/2, r = w/2 - 1;
     let g = c.createRadialGradient(cx-4, cy-4, 2, cx, cy, r);
     g.addColorStop(0, '#ff5e5e'); g.addColorStop(1, '#b30000');
     c.fillStyle = g; c.beginPath(); c.arc(cx, cy, r, 0, Math.PI*2); c.fill();
+    // Detail lines for rotation
     c.strokeStyle = '#800000'; c.lineWidth = 3;
     c.beginPath(); c.moveTo(cx, cy-r); c.lineTo(cx, cy+r); c.stroke();
     c.beginPath(); c.moveTo(cx-r, cy); c.lineTo(cx+r, cy); c.stroke();
+    // Gloss
     c.fillStyle = 'white'; c.beginPath(); c.arc(cx-6, cy-6, 4, 0, Math.PI*2); c.fill();
     c.strokeStyle = '#330000'; c.lineWidth = 1; c.beginPath(); c.arc(cx, cy, r, 0, Math.PI*2); c.stroke();
 });
 
+// 2. Organic Grass Tile
 const tileSprite = createTexture(20, 20, (c, w, h) => {
-    c.fillStyle = '#6d4c41'; c.fillRect(0, 0, w, h);
-    c.fillStyle = '#76ff03'; c.fillRect(0, 0, w, 6);
-    c.fillStyle = '#33691e'; c.fillRect(0, 6, w, 2);
-    c.fillStyle = '#5d4037'; c.fillRect(5, 10, 2, 2); c.fillRect(15, 14, 2, 2);
+    // Dirt body
+    c.fillStyle = '#5d4037'; c.fillRect(0, 0, w, h);
+    // Grass top with variation
+    c.fillStyle = '#76ff03'; c.fillRect(0, 0, w, 4);
+    c.fillStyle = '#64dd17'; c.fillRect(0, 4, w, 2); 
+    // Random details
+    c.fillStyle = '#3e2723'; c.fillRect(4, 10, 2, 2); c.fillRect(14, 15, 2, 2);
+    c.fillStyle = '#8d6e63'; c.fillRect(10, 12, 2, 2);
 });
 
-// Water Tile (Animated logic handled in draw, this is base texture)
+// 3. Transparent Water
 const waterSprite = createTexture(20, 20, (c, w, h) => {
-    c.fillStyle = '#0277bd'; c.fillRect(0, 0, w, h);
-    c.fillStyle = '#4fc3f7'; c.fillRect(0, 0, w, 4); // Surface
-    c.fillStyle = 'rgba(255,255,255,0.3)'; c.fillRect(2, 5, 5, 2); c.fillRect(12, 10, 4, 2);
+    c.fillStyle = 'rgba(2, 119, 189, 0.7)'; c.fillRect(0, 0, w, h);
+    c.fillStyle = 'rgba(79, 195, 247, 0.9)'; c.fillRect(0, 0, w, 3); 
+    c.fillStyle = 'rgba(255,255,255,0.4)'; c.fillRect(3, 5, 4, 1); c.fillRect(12, 12, 5, 1);
 });
 
-// Enemy Sprite (Angry Block)
+// 4. Parallax Mountain (Background)
+const mountainSprite = createTexture(400, 200, (c, w, h) => {
+    c.fillStyle = '#37474f';
+    c.beginPath(); c.moveTo(0, h); c.lineTo(100, 50); c.lineTo(250, h); c.fill();
+    c.fillStyle = '#455a64';
+    c.beginPath(); c.moveTo(150, h); c.lineTo(300, 20); c.lineTo(400, h); c.fill();
+    // Snow caps
+    c.fillStyle = '#eceff1';
+    c.beginPath(); c.moveTo(100, 50); c.lineTo(125, 75); c.lineTo(75, 75); c.fill();
+    c.beginPath(); c.moveTo(300, 20); c.lineTo(330, 50); c.lineTo(270, 50); c.fill();
+});
+
+// 5. Enemy
 const enemySprite = createTexture(24, 24, (c, w, h) => {
-    c.fillStyle = '#d32f2f'; c.fillRect(0, 0, w, h);
-    c.strokeStyle = '#8b0000'; c.lineWidth = 2; c.strokeRect(0,0,w,h);
-    // Eyes
-    c.fillStyle = '#fff'; c.fillRect(4, 5, 6, 6); c.fillRect(14, 5, 6, 6);
-    c.fillStyle = '#000'; c.fillRect(6, 7, 2, 2); c.fillRect(16, 7, 2, 2);
-    // Eyebrows
-    c.strokeStyle = '#000'; c.lineWidth = 2;
-    c.beginPath(); c.moveTo(3, 4); c.lineTo(10, 8); c.stroke();
-    c.beginPath(); c.moveTo(21, 4); c.lineTo(14, 8); c.stroke();
-});
-
-const treeSprite = createTexture(60, 100, (c, w, h) => {
-    c.fillStyle = '#5D4037'; c.fillRect(25, 60, 10, 40);
-    c.fillStyle = '#2E7D32';
-    c.beginPath(); c.moveTo(10, 70); c.lineTo(30, 20); c.lineTo(50, 70); c.fill();
-    c.beginPath(); c.moveTo(10, 50); c.lineTo(30, 5); c.lineTo(50, 50); c.fill();
+    let cx = w/2, cy = h/2;
+    c.fillStyle = '#8e24aa'; c.beginPath(); c.arc(cx, cy, 10, 0, Math.PI*2); c.fill();
+    c.strokeStyle = '#fff'; c.lineWidth = 2;
+    for(let i=0; i<8; i++) {
+        let ang = (i / 8) * Math.PI * 2;
+        c.beginPath(); c.moveTo(cx + Math.cos(ang)*8, cy + Math.sin(ang)*8);
+        c.lineTo(cx + Math.cos(ang)*12, cy + Math.sin(ang)*12); c.stroke();
+    }
+    c.fillStyle = '#ffeb3b'; c.fillRect(cx-5, cy-3, 4, 4); c.fillRect(cx+1, cy-3, 4, 4);
+    c.fillStyle = '#000'; c.fillRect(cx-4, cy-2, 2, 2); c.fillRect(cx+2, cy-2, 2, 2);
 });
 
 const flagSprite = createTexture(20, 40, (c, w, h) => {
     c.fillStyle = '#8B4513'; c.fillRect(2, 0, 4, 40);
-    c.fillStyle = '#FF0000'; c.beginPath(); c.moveTo(6, 2); c.lineTo(18, 10); c.lineTo(6, 18); c.fill();
+    c.fillStyle = '#d50000'; c.beginPath(); c.moveTo(6, 2); c.lineTo(20, 10); c.lineTo(6, 18); c.fill();
 });
 
 // --- CONSTANTS ---
@@ -184,7 +210,7 @@ const GRAVITY = 0.35;
 const JUMP_FORCE = -9.5;
 const ACCEL = 0.3;
 const FRICTION = 0.9;
-const MAX_SPEED = 4.5;
+const MAX_SPEED = 5;
 
 // --- STATE ---
 let gameState = 'MENU';
@@ -193,65 +219,34 @@ let camera = { x: 0, y: 0 };
 let score = 0;
 let globalTime = 0;
 let keys = { left: false, right: false, up: false };
+let particles = [];
 
 // --- LEVELS ---
-// Key: S=Start, #=Grass, ~=Water, ^=Spike, 3=Coin, E=Enemy, 9=Flag
+// Key: S=Start, #=Grass, ~=Water, ^=Spike, 3=Coin, 9=Flag
+// E = Horizontal Enemy, V = Vertical Enemy
 const levels = [
-    // 1. Tutorial
+    // CHAPTER 1: The Grand Plains (Massive Map)
     [
-        "................................................................",
-        "................................................................",
-        "................................................................",
-        ".................3...3..........................................",
-        ".................#####...3......................................",
-        "........S........#...#..###.........3.3................9........",
-        ".......###.......#...#..............###..............###........",
-        "#######...#######.....######....################.....#.#........"
+        "..........................................................................................................................................................................................................................................",
+        "..........................................................................................................................................................................................................................................",
+        "..........................................................................................................................................................................................................................................",
+        "...................................................................3.3.3.....................................3.......3......3...........................................................................................................",
+        "......................3...3...................3.3.................#######...................................###.....###....###..........V..............................3.3.3.......................#....................................",
+        "......................#####..................#####................#.....#...................................#.#.....#.#....#.#......................3.3.3..............#...#.......................#......................9.............",
+        "........S.............#...#..................#...#....E...........#.....#...........E...........E...........#.#.....#.#....#.#.........3..3.........#####..............#...#.....V.................#.....................###............",
+        ".......###............#...#..........##......#...#................#.....#...................................#.#.....#.#....#.#.........####.........#...#..............#...#.......................#....................#####...........",
+        "#######...############.....##########~~######.....################.......###########.....###################...#####...####...#########....#########.....##############.....#######################.####################.....###########"
     ],
-    // 2. Water Hazard
+    // CHAPTER 2: The Sky Islands
     [
-        "................................................................",
-        "................................................................",
-        "...................3.3................3.3.......................",
-        "..................#####...............###.......................",
-        "..................#...#...............#.#.......................",
-        ".....S............#...#.....3.3.......#.#.........9.............",
-        "....###......##...#...#....#####......#.#........###............",
-        "####...######~~###.....####~~~~~######...########...############"
-    ],
-    // 3. Spikes and Heights
-    [
-        "................................................................",
-        "................3.3.............................................",
-        "...............#####.......3..3.................................",
-        ".......................##..####.................................",
-        "..................###..##..#..#.................................",
-        ".....S.......###..###..##..#..#........3..3...............9.....",
-        "....###......###..###..##..#..#..^^...######.............###....",
-        "####...##############################.......#############...####"
-    ],
-    // 4. Enemy Patrols
-    [
-        "................................................................",
-        "................................................................",
-        "......................................................3...3.....",
-        ".....................................................###.###....",
-        "...................E.............3...................#.#.#.#....",
-        ".....S......3.....####......3...###..........3.......#.#.#.#.9..",
-        "....###....###.............###..........^...###..^...#.#.#.#.##.",
-        "####...####...#####...#####...###...####^###...##^###........... "
-    ],
-    // 5. The Gauntlet
-    [
-        "................................................................................",
-        "................................................................................",
-        "....................................................3.3.3.......................",
-        "...................................................#######......................",
-        "..................3................................#.....#......................",
-        ".....S...........###........3......E....3.....E....#.....#........9.............",
-        "....###....^.....#.#.......###...#####.###...#####.#.....#.......###............",
-        "####...####^#####...#######...###.....#...###.....#.......#######...############",
-        "...........~..................~.......~...~.......~............................."
+        "..........................................................................................................................................................................................................................................",
+        "..........................................................................................................................................................................................................................................",
+        "................3.3........................................#......................3.3.3.....................#.#.....................................................3.....................................................................",
+        "...............#####.......................................#......................#####.....................#.#....................................................###....................................................................",
+        ".......................##........................3.3.......#......................#.#.......................#.#..................3................V................#.#....................................................................",
+        ".....S.......###..###..##.....V.....3.....V......###.......#......V.....3....V....#.#.......V........E......#.#.......E.........###.......E........................#.#.............9....................................................",
+        "....###......###..###..##..........###..........#####......#...........###........#.#.......................#.#................#.#.................................#.#............###...................................................",
+        "####...############################...###########...#######.###########...########...#######################...################...##################################...############...####################################################"
     ]
 ];
 
@@ -260,12 +255,12 @@ let tiles = [];
 let water = [];
 let coins = [];
 let spikes = [];
-let enemies = []; // {x, y, vx, minX, maxX}
+let enemies = []; 
 let goal = null;
 let startPos = {x:0, y:0};
 
 function parseLevel(idx) {
-    tiles=[]; water=[]; coins=[]; spikes=[]; enemies=[]; goal=null;
+    tiles=[]; water=[]; coins=[]; spikes=[]; enemies=[]; goal=null; particles=[];
     let map = levels[idx];
     if(!map) return;
 
@@ -273,7 +268,7 @@ function parseLevel(idx) {
         for(let c=0; c<map[r].length; c++) {
             let ch = map[r][c];
             let x = c * TILE_SIZE;
-            let y = r * TILE_SIZE + 60; // Offset down
+            let y = r * TILE_SIZE + 60; 
 
             if(ch==='#') tiles.push({x, y});
             if(ch==='~') water.push({x, y});
@@ -282,36 +277,51 @@ function parseLevel(idx) {
             if(ch==='^') spikes.push({x: x, y: y});
             if(ch==='9') goal = {x: x, y: y};
             
-            // Enemy: Create logic
             if(ch==='E') {
-                // Enemies patrol the platform they are on.
-                // We scan left and right to find edges of the platform.
-                let minC = c; while(map[r][minC-1] === '#' || map[r][minC-1] === 'E') minC--;
-                let maxC = c; while(map[r][maxC+1] === '#' || map[r][maxC+1] === 'E') maxC++;
-                
-                enemies.push({
-                    x: x + 12, y: y + 12 - 4, // Center on tile, shift up slightly
-                    vx: 1.5,
-                    minX: minC * TILE_SIZE,
-                    maxX: (maxC + 1) * TILE_SIZE
-                });
-                
-                // Add a floor tile under the enemy so they don't fall in the map data
+                let minC = c; while(minC > 0 && map[r][minC-1] !== '#' && map[r][minC-1] !== 'E') minC--;
+                let maxC = c; while(maxC < map[r].length && map[r][maxC+1] !== '#' && map[r][maxC+1] !== 'E') maxC++;
+                enemies.push({type: 'h', x: x + 10, y: y + 10, vx: 1.0, vy: 0, min: minC * TILE_SIZE, max: (maxC + 1) * TILE_SIZE, active: true});
                 tiles.push({x, y});
+            }
+            if(ch==='V') {
+                let minR = r; while(minR > 0 && map[minR-1][c] !== '#') minR--;
+                let maxR = r; while(maxR < map.length-1 && map[maxR+1][c] !== '#') maxR++;
+                enemies.push({type: 'v', x: x + 10, y: y + 10, vx: 0, vy: 1.5, min: minR * TILE_SIZE + 60 + 15, max: maxR * TILE_SIZE + 60 + 5, active: true});
             }
         }
     }
 }
 
+// --- PARTICLE SYSTEM ---
+function spawnParticles(x, y, color, count) {
+    for(let i=0; i<count; i++) {
+        particles.push({
+            x: x, y: y,
+            vx: (Math.random() - 0.5) * 5,
+            vy: (Math.random() - 0.5) * 5,
+            life: 1.0,
+            color: color
+        });
+    }
+}
+
+function updateParticles() {
+    for(let i=particles.length-1; i>=0; i--) {
+        let p = particles[i];
+        p.x += p.vx;
+        p.y += p.vy;
+        p.life -= 0.05;
+        if(p.life <= 0) particles.splice(i, 1);
+    }
+}
+
+// --- PHYSICS ---
 function updatePhysics() {
     if(player.dead) return;
 
-    // Player Movement
     if (keys.left) player.vx -= ACCEL;
     if (keys.right) player.vx += ACCEL;
     player.vx *= FRICTION;
-    
-    // Limits
     if(player.vx > MAX_SPEED) player.vx = MAX_SPEED;
     if(player.vx < -MAX_SPEED) player.vx = -MAX_SPEED;
 
@@ -323,28 +333,58 @@ function updatePhysics() {
     if(keys.up && player.onGround) {
         player.vy = JUMP_FORCE;
         player.onGround = false;
+        // Jump dust
+        spawnParticles(player.x, player.y + 10, '#ddd', 3);
     }
 
     player.y += player.vy;
     player.onGround = false;
     checkTileCollision('y');
 
-    if(player.y > 400) killPlayer("You fell!");
+    if(player.y > 500) killPlayer("You fell into the abyss!");
 
-    // Enemy Logic
     enemies.forEach(e => {
-        e.x += e.vx;
-        // Turn around at patrol limits
-        if(e.x < e.minX + 12 || e.x > e.maxX - 12) e.vx *= -1;
+        if(!e.active) return;
+        if (e.type === 'h') {
+            e.x += e.vx;
+            if(e.x < e.min + 12 || e.x > e.max - 12) e.vx *= -1;
+        } else {
+            e.y += e.vy;
+            if(e.y < e.min || e.y > e.max) e.vy *= -1;
+        }
         
-        // Simple Collision with Player (Circle vs Box)
-        // Enemy is roughly 24x24 centered at e.x, e.y
-        if(Math.abs(player.x - e.x) < 18 && Math.abs(player.y - e.y) < 18) {
-            killPlayer("Caught by an enemy!");
+        let dx = player.x - e.x, dy = player.y - e.y;
+        if(Math.sqrt(dx*dx + dy*dy) < 22) { 
+            if (player.vy > 0 && player.y < e.y - 5) {
+                e.active = false;
+                player.vy = -7; 
+                score += 50;
+                document.getElementById('scoreVal').innerText = score;
+                spawnParticles(e.x, e.y, '#8e24aa', 10); // Explosion
+            } else {
+                killPlayer("Touched an enemy!");
+            }
         }
     });
 
-    checkEntities();
+    coins.forEach(c => {
+        if(!c.active) return;
+        if((player.x-c.x)**2 + (player.y-c.y)**2 < 200) { 
+            c.active = false; score += 10;
+            document.getElementById('scoreVal').innerText = score;
+            spawnParticles(c.x, c.y, '#FFD700', 5); // Sparkle
+        }
+    });
+
+    for(let s of spikes) {
+        if(player.x > s.x + 5 && player.x < s.x + 15 && player.y > s.y + 10 && player.y < s.y + 20) killPlayer("Spiked!");
+    }
+    for(let w of water) {
+        if (player.x + 5 > w.x && player.x - 5 < w.x + 20 && player.y + 9 > w.y && player.y - 9 < w.y + 20) killPlayer("You drowned!");
+    }
+    if(goal && (player.x - (goal.x+10))**2 + (player.y - (goal.y+20))**2 < 400) completeLevel();
+    
+    updateParticles();
 }
 
 function checkTileCollision(axis) {
@@ -354,6 +394,9 @@ function checkTileCollision(axis) {
     let bottom = Math.floor((player.y + player.radius + 10) / TILE_SIZE);
 
     for(let t of tiles) {
+        // Optimization: only check tiles close to player
+        if(Math.abs(t.x - player.x) > 30 || Math.abs(t.y - player.y) > 30) continue;
+
         if (player.x + player.radius > t.x && player.x - player.radius < t.x + TILE_SIZE &&
             player.y + player.radius > t.y && player.y - player.radius < t.y + TILE_SIZE) {
             
@@ -375,120 +418,87 @@ function checkTileCollision(axis) {
     }
 }
 
-function checkEntities() {
-    // Coins
-    coins.forEach(c => {
-        if(!c.active) return;
-        if((player.x-c.x)**2 + (player.y-c.y)**2 < 200) { 
-            c.active = false; score += 10;
-            document.getElementById('scoreVal').innerText = score;
-        }
-    });
-
-    // Spikes (Sharp Hitbox)
-    for(let s of spikes) {
-        // Spike is triangle bottom center. Hitbox is smaller than full tile.
-        if(player.x > s.x + 5 && player.x < s.x + 15 &&
-           player.y > s.y + 10 && player.y < s.y + 20) {
-            killPlayer("Spiked!");
-        }
-    }
-
-    // Water
-    for(let w of water) {
-        // Hit water surface (top 5 pixels of tile)
-        if (player.x + 5 > w.x && player.x - 5 < w.x + 20 &&
-            player.y + 9 > w.y && player.y - 9 < w.y + 20) {
-                killPlayer("You drowned!");
-        }
-    }
-
-    // Goal
-    if(goal) {
-        if((player.x - (goal.x+10))**2 + (player.y - (goal.y+20))**2 < 400) {
-            completeLevel();
-        }
-    }
-}
-
 function killPlayer(reason) {
     if(player.dead) return;
     player.dead = true;
     player.vx = 0; player.vy = -5;
-    setTimeout(() => {
-        showOverlay("GAME OVER", reason, "TRY AGAIN");
-    }, 500);
+    spawnParticles(player.x, player.y, '#ff3333', 15);
+    setTimeout(() => { showOverlay("GAME OVER", reason, "TRY AGAIN"); }, 800);
 }
 
 function completeLevel() {
     gameState = 'WIN_LEVEL';
     if(currentLevelIndex >= levels.length - 1) {
-        showOverlay("VICTORY!", "You beat all 5 Chapters!<br>Final Score: " + score, "PLAY AGAIN");
+        showOverlay("VICTORY!", "You beat the game!<br>Final Score: " + score, "PLAY AGAIN");
         gameState = 'GAME_COMPLETE';
     } else {
         showOverlay("CHAPTER CLEARED!", "Score: " + score, "NEXT CHAPTER");
     }
 }
 
+// --- RENDER ---
 function draw() {
     globalTime++;
-    // Sky
-    ctx.fillStyle = '#87CEEB'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+    // Sky Gradient
+    let grad = ctx.createLinearGradient(0, 0, 0, canvas.height);
+    grad.addColorStop(0, '#4fc3f7'); grad.addColorStop(1, '#e1f5fe');
+    ctx.fillStyle = grad; ctx.fillRect(0, 0, canvas.width, canvas.height);
 
     if (gameState === 'MENU') return;
 
-    // Camera
+    // Camera Logic
     let targetX = player.x - canvas.width / 2;
     if(targetX < 0) targetX = 0;
+    let mapWidth = levels[currentLevelIndex][0].length * TILE_SIZE;
+    if (targetX > mapWidth - canvas.width) targetX = mapWidth - canvas.width;
     camera.x += (targetX - camera.x) * 0.1;
 
+    // PARALLAX LAYER 1: Mountains (Slow)
+    ctx.save();
+    ctx.translate(-camera.x * 0.1, 50); // Moves at 10% speed
+    for(let i=0; i<10; i++) ctx.drawImage(mountainSprite, i * 380, 50);
+    ctx.restore();
+
+    // PARALLAX LAYER 2: Distant Trees/Clouds (Medium)
+    ctx.save();
+    ctx.translate(-camera.x * 0.5, 0); // Moves at 50% speed
+    ctx.fillStyle = 'rgba(255,255,255,0.6)';
+    for(let i=0; i<20; i++) {
+        ctx.beginPath(); ctx.arc(i*200, 50, 40, 0, Math.PI*2); ctx.fill(); // Clouds
+    }
+    ctx.restore();
+
+    // GAME LAYER
     ctx.save();
     ctx.translate(-Math.floor(camera.x), 0); 
 
-    // Decor Trees
-    for(let i=0; i<30; i++) ctx.drawImage(treeSprite, i * 150, 160); 
-
-    // Tiles
     tiles.forEach(t => {
-        if(t.x > camera.x - 30 && t.x < camera.x + 350) ctx.drawImage(tileSprite, t.x, t.y);
+        if(t.x > camera.x - 30 && t.x < camera.x + 500) ctx.drawImage(tileSprite, t.x, t.y);
     });
 
-    // Water (Animated)
-    let wave = Math.sin(globalTime/10) * 2;
-    water.forEach(w => {
-        if(w.x > camera.x - 30 && w.x < camera.x + 350) {
-            ctx.drawImage(waterSprite, w.x, w.y + (wave>0?1:0)); 
-        }
-    });
-
-    // Spikes
     ctx.fillStyle = '#444';
     spikes.forEach(s => {
-        if(s.x > camera.x - 30 && s.x < camera.x + 350) {
-            ctx.beginPath();
-            ctx.moveTo(s.x + 2, s.y + 20);
-            ctx.lineTo(s.x + 10, s.y + 2); // Sharp top
-            ctx.lineTo(s.x + 18, s.y + 20);
-            ctx.fill();
-            // Metallic shine
+        if(s.x > camera.x - 30 && s.x < camera.x + 500) {
+            ctx.beginPath(); ctx.moveTo(s.x+2, s.y+20); ctx.lineTo(s.x+10, s.y+2); ctx.lineTo(s.x+18, s.y+20); ctx.fill();
             ctx.fillStyle = '#888'; ctx.beginPath(); ctx.moveTo(s.x+10,s.y+2); ctx.lineTo(s.x+14,s.y+20); ctx.lineTo(s.x+6,s.y+20); ctx.fill(); ctx.fillStyle='#444';
         }
     });
 
-    // Enemies
     enemies.forEach(e => {
-        if(e.x > camera.x - 30 && e.x < camera.x + 350) {
-            // Draw enemy centered
-            ctx.drawImage(enemySprite, e.x - 12, e.y - 12);
+        if(e.active && e.x > camera.x - 30 && e.x < camera.x + 500) {
+            ctx.save(); ctx.translate(e.x, e.y);
+            if(e.type === 'v') {
+                let flap = Math.sin(globalTime/2) * 3;
+                ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(-8, -5 + flap, 5, 0, Math.PI*2); ctx.fill(); ctx.beginPath(); ctx.arc(8, -5 + flap, 5, 0, Math.PI*2); ctx.fill(); 
+            } else { ctx.rotate(Math.sin(globalTime/5) * 0.1); }
+            ctx.drawImage(enemySprite, -12, -12); ctx.restore();
         }
     });
 
-    // Goal
     if(goal) ctx.drawImage(flagSprite, goal.x, goal.y - 20);
 
-    // Coins
     coins.forEach(c => {
-        if(c.active) {
+        if(c.active && c.x > camera.x - 30 && c.x < camera.x + 500) {
             ctx.fillStyle = '#FFD700'; ctx.strokeStyle = '#B8860B'; ctx.lineWidth = 2;
             let bounce = Math.sin(globalTime / 10) * 3;
             ctx.beginPath(); ctx.arc(c.x, c.y + bounce, 6, 0, Math.PI*2); ctx.fill(); ctx.stroke();
@@ -497,12 +507,24 @@ function draw() {
     });
 
     // Player
-    ctx.save();
-    ctx.translate(player.x, player.y);
-    if(player.dead) ctx.globalAlpha = 0.5; 
-    ctx.rotate(player.angle);
-    ctx.drawImage(ballSprite, -player.radius, -player.radius, player.radius*2, player.radius*2);
-    ctx.restore();
+    if(!player.dead) {
+        ctx.save(); ctx.translate(player.x, player.y); ctx.rotate(player.angle);
+        ctx.drawImage(ballSprite, -player.radius, -player.radius, player.radius*2, player.radius*2);
+        ctx.restore();
+    }
+
+    // Water Overlay (Drawn last for transparency)
+    let wave = Math.sin(globalTime/15) * 2;
+    water.forEach(w => {
+        if(w.x > camera.x - 30 && w.x < camera.x + 500) ctx.drawImage(waterSprite, w.x, w.y + wave); 
+    });
+
+    // Particles
+    particles.forEach(p => {
+        ctx.fillStyle = p.color; ctx.globalAlpha = p.life;
+        ctx.fillRect(p.x, p.y, 3, 3);
+        ctx.globalAlpha = 1.0;
+    });
 
     ctx.restore();
 }
@@ -513,50 +535,37 @@ function gameLoop() {
     requestAnimationFrame(gameLoop);
 }
 
-// UI HANDLERS
+// --- UI ---
 function showOverlay(title, msg, btnText) {
-    gameState = (gameState === 'GAME_COMPLETE' ? 'GAME_COMPLETE' : 'MENU'); // Pause
-    const ov = document.getElementById('overlay');
+    gameState = (gameState === 'GAME_COMPLETE' ? 'GAME_COMPLETE' : 'MENU');
     document.getElementById('overlay-title').innerHTML = title;
     document.getElementById('overlay-msg').innerHTML = msg;
     document.getElementById('overlay-btn').innerText = btnText;
-    ov.style.display = 'flex';
+    document.getElementById('overlay').style.display = 'flex';
 }
 
 function handleOverlayClick() {
     const btnText = document.getElementById('overlay-btn').innerText;
     document.getElementById('overlay').style.display = 'none';
-
-    if(btnText === 'START GAME' || btnText === 'PLAY AGAIN') {
-        currentLevelIndex = 0; score = 0; document.getElementById('scoreVal').innerText = '0';
-        resetLevel();
-    } else if (btnText === 'TRY AGAIN') {
-        resetLevel(); // Restart current level
-    } else if (btnText === 'NEXT CHAPTER') {
-        currentLevelIndex++;
-        resetLevel();
-    }
+    if(btnText === 'START ADVENTURE' || btnText === 'PLAY AGAIN') {
+        currentLevelIndex = 0; score = 0; document.getElementById('scoreVal').innerText = '0'; resetLevel();
+    } else if (btnText === 'TRY AGAIN') { resetLevel(); 
+    } else if (btnText === 'NEXT CHAPTER') { currentLevelIndex++; resetLevel(); }
 }
 
 function resetLevel() {
     parseLevel(currentLevelIndex);
-    player.x = startPos.x; player.y = startPos.y;
-    player.vx = 0; player.vy = 0; player.angle = 0;
-    player.dead = false; player.onGround = false;
+    player.x = startPos.x; player.y = startPos.y; player.vx = 0; player.vy = 0; player.angle = 0; player.dead = false; player.onGround = false;
     document.getElementById('levelDisplay').innerText = "CHAPTER " + (currentLevelIndex + 1);
     gameState = 'PLAY';
 }
 
-// CONTROLS
+// --- INPUTS ---
 window.addEventListener('keydown', e => {
-    if(e.code === 'ArrowLeft') keys.left = true;
-    if(e.code === 'ArrowRight') keys.right = true;
-    if(e.code === 'ArrowUp' || e.code === 'Space') keys.up = true;
+    if(e.code === 'ArrowLeft') keys.left = true; if(e.code === 'ArrowRight') keys.right = true; if(e.code === 'ArrowUp' || e.code === 'Space') keys.up = true;
 });
 window.addEventListener('keyup', e => {
-    if(e.code === 'ArrowLeft') keys.left = false;
-    if(e.code === 'ArrowRight') keys.right = false;
-    if(e.code === 'ArrowUp' || e.code === 'Space') keys.up = false;
+    if(e.code === 'ArrowLeft') keys.left = false; if(e.code === 'ArrowRight') keys.right = false; if(e.code === 'ArrowUp' || e.code === 'Space') keys.up = false;
 });
 const addTouch = (id, k) => {
     const el = document.getElementById(id);
@@ -565,7 +574,6 @@ const addTouch = (id, k) => {
 };
 addTouch('btn-left', 'left'); addTouch('btn-right', 'right'); addTouch('btn-jump', 'up');
 
-// INIT
 gameState = 'MENU';
 gameLoop();
 
