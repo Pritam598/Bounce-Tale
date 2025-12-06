@@ -3,51 +3,36 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Bounce Tales: Ultimate Edition</title>
+    <title>Bounce Tales: Boss Battle</title>
     <style>
-        @font-face {
-            font-family: 'PixelFont';
-            src: local('Courier New'), local('Courier'), monospace;
-        }
+        @font-face { font-family: 'PixelFont'; src: local('Courier New'), local('Courier'), monospace; }
         
         body {
-            background-color: #121212;
-            margin: 0;
-            padding: 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            overflow: hidden;
-            font-family: 'PixelFont', monospace;
-            touch-action: none;
+            background-color: #202020; margin: 0; padding: 0;
+            display: flex; justify-content: center; align-items: center;
+            height: 100vh; overflow: hidden;
+            font-family: 'PixelFont', monospace; touch-action: none; user-select: none;
         }
 
         #game-device {
-            position: relative;
-            width: 100%;
-            max-width: 700px; /* Wider screen */
-            aspect-ratio: 16/9;
-            background: #222;
-            border: 8px solid #444;
-            border-radius: 10px;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.8);
-            overflow: hidden;
+            position: relative; width: 100%; max-width: 740px; aspect-ratio: 16/9;
+            background: #000; border: 6px solid #444; border-radius: 20px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.8); overflow: hidden;
         }
 
-        canvas {
-            display: block;
-            width: 100%;
-            height: 100%;
-            image-rendering: pixelated; 
-        }
+        canvas { display: block; width: 100%; height: 100%; image-rendering: pixelated; }
 
         #ui {
-            position: absolute;
-            top: 10px; left: 15px; right: 15px;
+            position: absolute; top: 15px; left: 20px; right: 20px;
             display: flex; justify-content: space-between;
             color: #fff; font-size: 16px; font-weight: bold;
             text-shadow: 2px 2px 0 #000; pointer-events: none; z-index: 20;
+        }
+        
+        .hud-box {
+            background: rgba(0,0,0,0.6); padding: 8px 15px;
+            border-radius: 20px; border: 2px solid rgba(255,255,255,0.8);
+            box-shadow: 0 4px 0 rgba(0,0,0,0.4);
         }
 
         #overlay {
@@ -55,37 +40,49 @@
             background: rgba(0,0,0,0.85);
             display: flex; flex-direction: column;
             justify-content: center; align-items: center;
-            color: white; z-index: 30;
-            backdrop-filter: blur(4px);
+            color: white; z-index: 30; backdrop-filter: blur(5px);
         }
         
-        h1 { 
-            font-size: 48px; color: #ff3333; 
-            text-shadow: 4px 4px 0 #330000; margin: 0 0 10px 0; 
-            text-transform: uppercase; letter-spacing: 2px;
-        }
-        p { margin-bottom: 30px; color: #ddd; text-align: center; font-size: 16px; line-height: 1.6; }
+        h1 { font-size: 48px; color: #ffeb3b; text-shadow: 4px 4px 0 #ff5722; margin: 0 0 15px 0; letter-spacing: 2px; text-align: center; }
+        p { margin-bottom: 25px; color: #eee; text-align: center; font-size: 16px; line-height: 1.6; }
 
         button {
-            background: linear-gradient(to bottom, #ffeb3b, #fbc02d);
-            border: 2px solid #fff;
-            padding: 12px 30px; font-family: inherit; font-size: 20px;
-            font-weight: bold; color: #331a00; cursor: pointer;
-            box-shadow: 0 6px 0 #b38f00; border-radius: 50px;
-            transition: transform 0.1s;
+            background: #00e676; border: 3px solid #fff;
+            padding: 15px 40px; font-family: inherit; font-size: 20px;
+            font-weight: bold; color: #004d40; cursor: pointer;
+            box-shadow: 0 6px 0 #00a152; border-radius: 30px; transition: all 0.1s;
         }
         button:active { transform: translateY(6px); box-shadow: none; }
 
-        /* Mobile Controls */
         #mobile-controls {
-            position: absolute; bottom: 20px; left: 0; width: 100%; height: 120px;
+            position: absolute; bottom: 10px; left: 0; width: 100%; height: 120px;
             display: none; pointer-events: none; z-index: 25;
         }
-        .d-pad { position: absolute; bottom: 20px; left: 30px; width: 140px; height: 90px; pointer-events: auto; }
-        .action-btn { position: absolute; bottom: 30px; right: 30px; width: 80px; height: 80px; background: rgba(255,255,255,0.2); border: 3px solid white; border-radius: 50%; pointer-events: auto; }
-        .arrow { width: 60px; height: 60px; background: rgba(255,255,255,0.2); border: 2px solid white; position: absolute; display: flex; justify-content: center; align-items: center; font-size: 30px; color: white; user-select: none; border-radius: 10px; }
-        .arrow:active, .action-btn:active { background: rgba(255,255,255,0.5); }
-        .left { left: 0; top: 15px; } .right { right: 0; top: 15px; }
+        
+        .d-pad { position: absolute; bottom: 15px; left: 20px; width: 140px; height: 90px; pointer-events: auto; }
+        
+        .btn-round { 
+            position: absolute; bottom: 20px; width: 70px; height: 70px; 
+            border-radius: 50%; pointer-events: auto; 
+            display:flex; justify-content:center; align-items:center;
+            color:white; font-size:18px; font-weight:bold;
+            box-shadow: 0 5px 0 rgba(0,0,0,0.5); transition: transform 0.1s;
+        }
+
+        #btn-jump { right: 20px; background: #2979ff; border: 3px solid #82b1ff; }
+        #btn-jump:active { background: #1565c0; transform: translateY(5px); box-shadow: none; }
+        #btn-shoot { right: 110px; background: #ff1744; border: 3px solid #ff8a80; font-size: 24px;}
+        #btn-shoot:active { background: #d50000; transform: translateY(5px); box-shadow: none; }
+        
+        .arrow { 
+            width: 60px; height: 60px; 
+            background: #ffab00; border: 3px solid #ffe57f; 
+            position: absolute; display: flex; justify-content: center; align-items: center; 
+            font-size: 30px; color: #3e2723; user-select: none; border-radius: 15px;
+            pointer-events: auto; box-shadow: 0 5px 0 #ef6c00;
+        }
+        .arrow:active { transform: translateY(5px); box-shadow: none; }
+        .left { left: 0; bottom: 0; } .right { right: 0; bottom: 0; }
 
         @media (max-width: 800px) {
             #mobile-controls { display: block; }
@@ -99,120 +96,127 @@
     <canvas id="gameCanvas" width="480" height="270"></canvas>
     
     <div id="ui">
-        <div>COINS: <span id="scoreVal" style="color:#FFD700">0</span></div>
-        <div id="levelDisplay">CHAPTER 1</div>
+        <div class="hud-box">⭐ COINS: <span id="scoreVal" style="color:#FFD700">0</span></div>
+        <div class="hud-box" id="levelDisplay">LEVEL 1</div>
     </div>
 
     <div id="overlay">
-        <h1 id="overlay-title">BOUNCE<br>ULTIMATE</h1>
+        <h1 id="overlay-title">BOUNCE BOSS</h1>
         <p id="overlay-msg">
-            Explore the Massive World.<br>
-            <span style="color:#76ff03">ARROWS</span> to Move. <span style="color:#FFF">SPACE</span> to Jump.<br>
-            Jump <b>ON</b> enemies to squash them!
+            Arrows to Move. Blue to Jump. Red to Shoot.<br>
+            <b>LEVEL 3</b> has a BOSS FIGHT!<br>
+            Defeat the <b>Dark King</b>!
         </p>
-        <button id="overlay-btn" onclick="handleOverlayClick()">START ADVENTURE</button>
+        <button id="overlay-btn" onclick="handleOverlayClick()">LET'S GO!</button>
     </div>
 
     <div id="mobile-controls">
-        <div class="d-pad">
-            <div class="arrow left" id="btn-left">‹</div>
-            <div class="arrow right" id="btn-right">›</div>
-        </div>
-        <div class="action-btn" id="btn-jump"></div>
+        <div class="d-pad"><div class="arrow left" id="btn-left">‹</div><div class="arrow right" id="btn-right">›</div></div>
+        <div class="btn-round" id="btn-shoot">●</div>
+        <div class="btn-round" id="btn-jump">UP</div>
     </div>
 </div>
 
 <script>
-/** * BOUNCE TALES: ULTIMATE EDITION 
- * Features: Parallax Backgrounds, Particles, Massive Maps
- */
+/** BOUNCE TALES: BOSS EDITION */
 
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 
-// --- ASSETS GENERATION ---
-function createTexture(w, h, drawFn) {
-    const c = document.createElement('canvas');
-    c.width = w; c.height = h;
-    const x = c.getContext('2d');
-    drawFn(x, w, h);
-    return c;
-}
+// --- SOUND ENGINE ---
+const Sound = {
+    ctx: null,
+    init: function() {
+        if (!this.ctx) this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+        else if (this.ctx.state === 'suspended') this.ctx.resume();
+    },
+    play: function(type) {
+        if (!this.ctx) return;
+        const t = this.ctx.currentTime;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.connect(gain); gain.connect(this.ctx.destination);
 
-// 1. High Detail Ball
+        if (type === 'jump') {
+            osc.type = 'square'; osc.frequency.setValueAtTime(150, t); osc.frequency.exponentialRampToValueAtTime(600, t + 0.1);
+            gain.gain.setValueAtTime(0.1, t); gain.gain.exponentialRampToValueAtTime(0.01, t + 0.15);
+            osc.start(t); osc.stop(t + 0.15);
+        } else if (type === 'shoot') {
+            osc.type = 'sawtooth'; osc.frequency.setValueAtTime(800, t); osc.frequency.exponentialRampToValueAtTime(100, t + 0.15);
+            gain.gain.setValueAtTime(0.1, t); gain.gain.exponentialRampToValueAtTime(0.01, t + 0.15);
+            osc.start(t); osc.stop(t + 0.15);
+        } else if (type === 'boss_hit') {
+            osc.type = 'sawtooth'; osc.frequency.setValueAtTime(100, t); osc.frequency.linearRampToValueAtTime(50, t + 0.1);
+            gain.gain.setValueAtTime(0.2, t); gain.gain.linearRampToValueAtTime(0, t + 0.1);
+            osc.start(t); osc.stop(t + 0.1);
+        } else if (type === 'boss_shoot') {
+            osc.type = 'square'; osc.frequency.setValueAtTime(200, t); osc.frequency.exponentialRampToValueAtTime(50, t + 0.3);
+            gain.gain.setValueAtTime(0.1, t); gain.gain.linearRampToValueAtTime(0, t + 0.3);
+            osc.start(t); osc.stop(t + 0.3);
+        } else if (type === 'coin') {
+            osc.type = 'sine'; osc.frequency.setValueAtTime(1200, t); osc.frequency.setValueAtTime(1600, t + 0.05);
+            gain.gain.setValueAtTime(0.1, t); gain.gain.exponentialRampToValueAtTime(0.01, t + 0.3);
+            osc.start(t); osc.stop(t + 0.3);
+        } else if (type === 'die') {
+            osc.type = 'sawtooth'; osc.frequency.setValueAtTime(400, t); osc.frequency.exponentialRampToValueAtTime(50, t + 0.6);
+            gain.gain.setValueAtTime(0.2, t); gain.gain.linearRampToValueAtTime(0, t + 0.6);
+            osc.start(t); osc.stop(t + 0.6);
+        }
+    }
+};
+
+// --- ASSETS ---
+function createTexture(w, h, drawFn) {
+    const c = document.createElement('canvas'); c.width = w; c.height = h;
+    const x = c.getContext('2d'); drawFn(x, w, h); return c;
+}
 const ballSprite = createTexture(32, 32, (c, w, h) => {
     let cx = w/2, cy = h/2, r = w/2 - 1;
-    let g = c.createRadialGradient(cx-4, cy-4, 2, cx, cy, r);
-    g.addColorStop(0, '#ff5e5e'); g.addColorStop(1, '#b30000');
+    let g = c.createRadialGradient(cx-4, cy-4, 2, cx, cy, r); g.addColorStop(0, '#ff5e5e'); g.addColorStop(1, '#d50000');
     c.fillStyle = g; c.beginPath(); c.arc(cx, cy, r, 0, Math.PI*2); c.fill();
-    // Detail lines for rotation
-    c.strokeStyle = '#800000'; c.lineWidth = 3;
-    c.beginPath(); c.moveTo(cx, cy-r); c.lineTo(cx, cy+r); c.stroke();
-    c.beginPath(); c.moveTo(cx-r, cy); c.lineTo(cx+r, cy); c.stroke();
-    // Gloss
-    c.fillStyle = 'white'; c.beginPath(); c.arc(cx-6, cy-6, 4, 0, Math.PI*2); c.fill();
-    c.strokeStyle = '#330000'; c.lineWidth = 1; c.beginPath(); c.arc(cx, cy, r, 0, Math.PI*2); c.stroke();
+    c.fillStyle = 'white'; c.beginPath(); c.ellipse(cx-6, cy-4, 5, 7, 0, 0, Math.PI*2); c.fill(); c.beginPath(); c.ellipse(cx+6, cy-4, 5, 7, 0, 0, Math.PI*2); c.fill();
+    c.fillStyle = 'black'; c.beginPath(); c.arc(cx-5, cy-4, 2, 0, Math.PI*2); c.fill(); c.beginPath(); c.arc(cx+5, cy-4, 2, 0, Math.PI*2); c.fill();
+    c.strokeStyle = '#3e2723'; c.lineWidth = 2; c.beginPath(); c.arc(cx, cy+2, 6, 0.2, Math.PI-0.2); c.stroke();
 });
-
-// 2. Organic Grass Tile
 const tileSprite = createTexture(20, 20, (c, w, h) => {
-    // Dirt body
-    c.fillStyle = '#5d4037'; c.fillRect(0, 0, w, h);
-    // Grass top with variation
-    c.fillStyle = '#76ff03'; c.fillRect(0, 0, w, 4);
-    c.fillStyle = '#64dd17'; c.fillRect(0, 4, w, 2); 
-    // Random details
-    c.fillStyle = '#3e2723'; c.fillRect(4, 10, 2, 2); c.fillRect(14, 15, 2, 2);
-    c.fillStyle = '#8d6e63'; c.fillRect(10, 12, 2, 2);
+    c.fillStyle = '#795548'; c.fillRect(0, 0, w, h); c.fillStyle = '#76ff03'; c.fillRect(0, 0, w, 6);
+    c.fillStyle = '#64dd17'; c.fillRect(0, 6, w, 2); c.fillStyle = '#a1887f'; c.fillRect(5, 12, 4, 4);
 });
-
-// 3. Transparent Water
-const waterSprite = createTexture(20, 20, (c, w, h) => {
-    c.fillStyle = 'rgba(2, 119, 189, 0.7)'; c.fillRect(0, 0, w, h);
-    c.fillStyle = 'rgba(79, 195, 247, 0.9)'; c.fillRect(0, 0, w, 3); 
-    c.fillStyle = 'rgba(255,255,255,0.4)'; c.fillRect(3, 5, 4, 1); c.fillRect(12, 12, 5, 1);
-});
-
-// 4. Parallax Mountain (Background)
-const mountainSprite = createTexture(400, 200, (c, w, h) => {
-    c.fillStyle = '#37474f';
-    c.beginPath(); c.moveTo(0, h); c.lineTo(100, 50); c.lineTo(250, h); c.fill();
-    c.fillStyle = '#455a64';
-    c.beginPath(); c.moveTo(150, h); c.lineTo(300, 20); c.lineTo(400, h); c.fill();
-    // Snow caps
-    c.fillStyle = '#eceff1';
-    c.beginPath(); c.moveTo(100, 50); c.lineTo(125, 75); c.lineTo(75, 75); c.fill();
-    c.beginPath(); c.moveTo(300, 20); c.lineTo(330, 50); c.lineTo(270, 50); c.fill();
-});
-
-// 5. Enemy
-const enemySprite = createTexture(24, 24, (c, w, h) => {
+const bossSprite = createTexture(40, 40, (c, w, h) => {
     let cx = w/2, cy = h/2;
-    c.fillStyle = '#8e24aa'; c.beginPath(); c.arc(cx, cy, 10, 0, Math.PI*2); c.fill();
-    c.strokeStyle = '#fff'; c.lineWidth = 2;
-    for(let i=0; i<8; i++) {
-        let ang = (i / 8) * Math.PI * 2;
-        c.beginPath(); c.moveTo(cx + Math.cos(ang)*8, cy + Math.sin(ang)*8);
-        c.lineTo(cx + Math.cos(ang)*12, cy + Math.sin(ang)*12); c.stroke();
-    }
-    c.fillStyle = '#ffeb3b'; c.fillRect(cx-5, cy-3, 4, 4); c.fillRect(cx+1, cy-3, 4, 4);
-    c.fillStyle = '#000'; c.fillRect(cx-4, cy-2, 2, 2); c.fillRect(cx+2, cy-2, 2, 2);
+    c.fillStyle = '#4a148c'; c.beginPath(); c.arc(cx, cy, 18, 0, Math.PI*2); c.fill(); // Body
+    c.fillStyle = '#ffeb3b'; c.beginPath(); c.moveTo(cx-10, cy-12); c.lineTo(cx, cy-22); c.lineTo(cx+10, cy-12); c.lineTo(cx+5, cy-8); c.lineTo(cx-5, cy-8); c.fill(); // Crown
+    c.fillStyle = 'white'; c.beginPath(); c.arc(cx-6, cy, 5, 0, Math.PI*2); c.fill(); c.beginPath(); c.arc(cx+6, cy, 5, 0, Math.PI*2); c.fill(); // Eyes
+    c.fillStyle = 'red'; c.beginPath(); c.arc(cx-6, cy, 2, 0, Math.PI*2); c.fill(); c.beginPath(); c.arc(cx+6, cy, 2, 0, Math.PI*2); c.fill();
+    c.strokeStyle = 'white'; c.lineWidth = 2; c.beginPath(); c.moveTo(cx-8, cy-4); c.lineTo(cx, cy+2); c.stroke(); // Angry
 });
-
+const bounceSprite = createTexture(20, 20, (c, w, h) => {
+    c.fillStyle = '#5d4037'; c.fillRect(0, 0, w, h); c.fillStyle = '#ff9800'; c.fillRect(2, 2, 16, 16);
+    c.strokeStyle = '#e65100'; c.lineWidth = 2; c.strokeRect(2,2,16,16);
+});
+const waterSprite = createTexture(20, 20, (c, w, h) => {
+    c.fillStyle = 'rgba(64, 196, 255, 0.7)'; c.fillRect(0, 0, w, h); c.fillStyle = 'rgba(255,255,255,0.4)'; c.fillRect(2, 4, 8, 2);
+});
+const enemySprite = createTexture(24, 24, (c, w, h) => {
+    let cx = w/2, cy = h/2; c.fillStyle = '#ab47bc'; c.beginPath(); c.arc(cx, cy, 10, 0, Math.PI*2); c.fill();
+    c.fillStyle = '#fff'; c.beginPath(); c.arc(cx-4, cy-2, 3, 0, Math.PI*2); c.fill(); c.beginPath(); c.arc(cx+4, cy-2, 3, 0, Math.PI*2); c.fill();
+    c.fillStyle = '#000'; c.beginPath(); c.arc(cx-4, cy-2, 1, 0, Math.PI*2); c.fill(); c.beginPath(); c.arc(cx+4, cy-2, 1, 0, Math.PI*2); c.fill();
+});
 const flagSprite = createTexture(20, 40, (c, w, h) => {
-    c.fillStyle = '#8B4513'; c.fillRect(2, 0, 4, 40);
-    c.fillStyle = '#d50000'; c.beginPath(); c.moveTo(6, 2); c.lineTo(20, 10); c.lineTo(6, 18); c.fill();
+    c.fillStyle = '#795548'; c.fillRect(2, 0, 4, 40); c.fillStyle = '#ffeb3b'; c.beginPath(); c.moveTo(6, 2); c.lineTo(20, 10); c.lineTo(6, 18); c.fill();
+});
+const flowerSprite = createTexture(20, 20, (c, w, h) => {
+    c.fillStyle = '#4caf50'; c.fillRect(9, 10, 2, 10); c.fillStyle = '#f44336'; c.beginPath(); c.arc(10, 10, 4, 0, Math.PI*2); c.fill();
 });
 
-// --- CONSTANTS ---
 const TILE_SIZE = 20;
-const GRAVITY = 0.35;
-const JUMP_FORCE = -9.5;
-const ACCEL = 0.3;
+const JUMP_FORCE = -7.8; 
+const BOUNCE_FORCE = -14;
+const GRAVITY = 0.35; 
+const ACCEL = 0.25; 
 const FRICTION = 0.9;
-const MAX_SPEED = 5;
+const MAX_SPEED = 4.5;
 
-// --- STATE ---
 let gameState = 'MENU';
 let currentLevelIndex = 0;
 let camera = { x: 0, y: 0 };
@@ -220,37 +224,54 @@ let score = 0;
 let globalTime = 0;
 let keys = { left: false, right: false, up: false };
 let particles = [];
+let bullets = [];
+let enemyBullets = [];
+let lastShootTime = 0;
+let decor = [];
 
-// --- LEVELS ---
-// Key: S=Start, #=Grass, ~=Water, ^=Spike, 3=Coin, 9=Flag
-// E = Horizontal Enemy, V = Vertical Enemy
 const levels = [
-    // CHAPTER 1: The Grand Plains (Massive Map)
     [
-        "..........................................................................................................................................................................................................................................",
-        "..........................................................................................................................................................................................................................................",
-        "..........................................................................................................................................................................................................................................",
-        "...................................................................3.3.3.....................................3.......3......3...........................................................................................................",
-        "......................3...3...................3.3.................#######...................................###.....###....###..........V..............................3.3.3.......................#....................................",
-        "......................#####..................#####................#.....#...................................#.#.....#.#....#.#......................3.3.3..............#...#.......................#......................9.............",
-        "........S.............#...#..................#...#....E...........#.....#...........E...........E...........#.#.....#.#....#.#.........3..3.........#####..............#...#.....V.................#.....................###............",
-        ".......###............#...#..........##......#...#................#.....#...................................#.#.....#.#....#.#.........####.........#...#..............#...#.......................#....................#####...........",
-        "#######...############.....##########~~######.....################.......###########.....###################...#####...####...#########....#########.....##############.....#######################.####################.....###########"
+        "............................................................................................................................................................................................................................................................................................................................................",
+        "............................................................................................................................................................................................................................................................................................................................................",
+        "............................................................................................................................................................................................................................................................................................................................................",
+        "............................................................................................................................................................................................................................................................................................................................................",
+        "..............................................................................3..3....................................3.3.3...........................................................................................................................................................................................................",
+        "............................................................................#######..................................#######..........................................................................................................................................................................................................",
+        "......................................3..................3..................#.....#.................................##.....##.........................................................................................................................................................................................................",
+        ".....................................###...............#####................#.....#................................##.......##........................................................................................................................................................................................................",
+        "........S..............E............#####.......V......#####.......3........#.....#........E..........3......V....##.........##...............9.......................................................................................................................................................................................",
+        "......####............###..........#######............#####......###.......#.....#.......###........###..........#...........#..............###.......................................................................................................................................................................................",
+        "#####...#####...#####...#####...###.......#####...#####.....######...#######.......#######...########...#####...##.............##...#########...############........................................................................................................................................................................",
+        "............................................................................................................................................................................................................................................................................................................................................"
     ],
-    // CHAPTER 2: The Sky Islands
     [
-        "..........................................................................................................................................................................................................................................",
-        "..........................................................................................................................................................................................................................................",
-        "................3.3........................................#......................3.3.3.....................#.#.....................................................3.....................................................................",
-        "...............#####.......................................#......................#####.....................#.#....................................................###....................................................................",
-        ".......................##........................3.3.......#......................#.#.......................#.#..................3................V................#.#....................................................................",
-        ".....S.......###..###..##.....V.....3.....V......###.......#......V.....3....V....#.#.......V........E......#.#.......E.........###.......E........................#.#.............9....................................................",
-        "....###......###..###..##..........###..........#####......#...........###........#.#.......................#.#................#.#.................................#.#............###...................................................",
-        "####...############################...###########...#######.###########...########...#######################...################...##################################...############...####################################################"
+        ".......................................................................................................................................................................................................................................................................................................",
+        ".......................................................................................................................................................................................................................................................................................................",
+        ".......................................................................................................................................................................................................................................................................................................",
+        "...................................................................................................3...................................................................................................................................................................................................",
+        "...................................................................3.............................#####.................................................................................................................................................................................................",
+        ".................................................................#####...........................#...#....................................................3.3.3......................................................................................................................................",
+        "..................................................3..............#...#...........V...............#...#..............3......3......3......................#######.....................................................................................................................................",
+        ".....S.........3..................3..............###.............#...#...........................#...#..............T......T......T......................#.....#..............................................................V..................3.3.....................................9...........",
+        "....###.......###.......E........###.............###.......E.....#...#...................3.......#...#.......................................E...........#.....#...........E..........^...........V...........^.............#####...............#####...................................###..........",
+        "####...#######...#######T########...####...######...#######T#####.....#########...#######T#######.....#######...####...####...####...#########T##########.......###########T##########^###########...#########^#############.......###############.....####################################...##########"
+    ],
+    // LEVEL 3: BOSS ARENA
+    [
+        "...............................................................................................................................",
+        "...............................................................................................................................",
+        "...............................................................................................................................",
+        "...............................................................................................................................",
+        "...............................................................................................................................",
+        "...............................................................................................................................",
+        "...............................................................................................................................",
+        ".......S.....................T.......................................................T.......................9.................",
+        ".....#####.......................3...........B...........3.................................................#####...............",
+        "####.......#####################################################################################.....######...#################"
     ]
 ];
 
-let player = { x: 0, y: 0, radius: 9, vx: 0, vy: 0, angle: 0, onGround: false, dead: false };
+let player = { x: 0, y: 0, radius: 9, vx: 0, vy: 0, angle: 0, onGround: false, dead: false, facing: 1 };
 let tiles = [];
 let water = [];
 let coins = [];
@@ -260,9 +281,8 @@ let goal = null;
 let startPos = {x:0, y:0};
 
 function parseLevel(idx) {
-    tiles=[]; water=[]; coins=[]; spikes=[]; enemies=[]; goal=null; particles=[];
-    let map = levels[idx];
-    if(!map) return;
+    tiles=[]; water=[]; coins=[]; spikes=[]; enemies=[]; decor=[]; goal=null; particles=[]; bullets=[]; enemyBullets=[];
+    let map = levels[idx]; if(!map) return;
 
     for(let r=0; r<map.length; r++) {
         for(let c=0; c<map[r].length; c++) {
@@ -270,228 +290,259 @@ function parseLevel(idx) {
             let x = c * TILE_SIZE;
             let y = r * TILE_SIZE + 60; 
 
-            if(ch==='#') tiles.push({x, y});
+            if(ch==='#' || ch==='T') {
+                tiles.push({x, y, type: ch}); 
+                if(ch === '#' && r > 0 && map[r-1][c] === '.') if(Math.random() > 0.7) decor.push({x: x, y: y-10, type: 'flower'});
+            }
             if(ch==='~') water.push({x, y});
             if(ch==='S') { player.x = x+10; player.y = y; startPos = {x:x+10, y:y}; }
             if(ch==='3') coins.push({x: x+10, y: y+10, active: true});
             if(ch==='^') spikes.push({x: x, y: y});
             if(ch==='9') goal = {x: x, y: y};
-            
-            if(ch==='E') {
-                let minC = c; while(minC > 0 && map[r][minC-1] !== '#' && map[r][minC-1] !== 'E') minC--;
-                let maxC = c; while(maxC < map[r].length && map[r][maxC+1] !== '#' && map[r][maxC+1] !== 'E') maxC++;
-                enemies.push({type: 'h', x: x + 10, y: y + 10, vx: 1.0, vy: 0, min: minC * TILE_SIZE, max: (maxC + 1) * TILE_SIZE, active: true});
-                tiles.push({x, y});
-            }
+            if(ch==='E') { enemies.push({type: 'h', x: x+10, y: y+8, vx: 1.0, vy: 0, active: true}); tiles.push({x, y, type: '#'}); }
             if(ch==='V') {
-                let minR = r; while(minR > 0 && map[minR-1][c] !== '#') minR--;
-                let maxR = r; while(maxR < map.length-1 && map[maxR+1][c] !== '#') maxR++;
-                enemies.push({type: 'v', x: x + 10, y: y + 10, vx: 0, vy: 1.5, min: minR * TILE_SIZE + 60 + 15, max: maxR * TILE_SIZE + 60 + 5, active: true});
+                let minY = y - 60, maxY = y + 20; 
+                for(let k=r; k>=0; k--) if(map[k][c] === '#') { minY = (k+1)*TILE_SIZE + 60; break; }
+                for(let k=r; k<map.length; k++) if(map[k][c] === '#') { maxY = (k-1)*TILE_SIZE + 60; break; }
+                enemies.push({ type: 'v', x: x+10, y: y+8, vx: 0, vy: 1.2, minY: minY, maxY: maxY, active: true });
+            }
+            // BOSS
+            if(ch==='B') {
+                enemies.push({
+                    type: 'boss', x: x+20, y: y, vx: 0, vy: 0, hp: 15, maxHp: 15, active: true,
+                    timer: 0, state: 'idle', facing: -1
+                });
             }
         }
     }
 }
 
-// --- PARTICLE SYSTEM ---
 function spawnParticles(x, y, color, count) {
-    for(let i=0; i<count; i++) {
-        particles.push({
-            x: x, y: y,
-            vx: (Math.random() - 0.5) * 5,
-            vy: (Math.random() - 0.5) * 5,
-            life: 1.0,
-            color: color
-        });
-    }
+    for(let i=0; i<count; i++) particles.push({x: x, y: y, vx: (Math.random()-0.5)*5, vy: (Math.random()-0.5)*5, life: 1.0, color: color});
 }
 
-function updateParticles() {
-    for(let i=particles.length-1; i>=0; i--) {
-        let p = particles[i];
-        p.x += p.vx;
-        p.y += p.vy;
-        p.life -= 0.05;
-        if(p.life <= 0) particles.splice(i, 1);
-    }
+function shoot() {
+    let now = Date.now(); if (now - lastShootTime < 400) return;
+    lastShootTime = now; Sound.play('shoot');
+    bullets.push({ x: player.x, y: player.y, vx: 7 * player.facing, life: 70 });
+    spawnParticles(player.x + (10*player.facing), player.y, '#ffeb3b', 5);
 }
 
-// --- PHYSICS ---
 function updatePhysics() {
     if(player.dead) return;
-
-    if (keys.left) player.vx -= ACCEL;
-    if (keys.right) player.vx += ACCEL;
+    if (keys.left) { player.vx -= ACCEL; player.facing = -1; }
+    if (keys.right) { player.vx += ACCEL; player.facing = 1; }
     player.vx *= FRICTION;
-    if(player.vx > MAX_SPEED) player.vx = MAX_SPEED;
-    if(player.vx < -MAX_SPEED) player.vx = -MAX_SPEED;
-
-    player.angle += player.vx * 0.15;
-    player.x += player.vx;
-    checkTileCollision('x');
-
+    if(player.vx > MAX_SPEED) player.vx = MAX_SPEED; if(player.vx < -MAX_SPEED) player.vx = -MAX_SPEED;
+    player.angle += player.vx * 0.15; player.x += player.vx; checkTileCollision('x', player);
     player.vy += GRAVITY;
-    if(keys.up && player.onGround) {
-        player.vy = JUMP_FORCE;
-        player.onGround = false;
-        // Jump dust
-        spawnParticles(player.x, player.y + 10, '#ddd', 3);
+    if(keys.up && player.onGround) { player.vy = JUMP_FORCE; player.onGround = false; Sound.play('jump'); spawnParticles(player.x, player.y + 10, '#fff', 3); }
+    player.y += player.vy; player.onGround = false; checkTileCollision('y', player);
+    if(player.y > 600) killPlayer("Oops! You fell.");
+    updateEntities();
+}
+
+function checkTileCollision(axis, obj) {
+    let r = (obj.radius || 9), t_size = TILE_SIZE;
+    let startC = Math.floor((obj.x - r) / t_size), endC = Math.floor((obj.x + r) / t_size);
+    let startR = Math.floor((obj.y - r) / t_size), endR = Math.floor((obj.y + r) / t_size);
+
+    for(let t of tiles) {
+        if(t.x < (startC-1)*t_size || t.x > (endC+1)*t_size || t.y < (startR-1)*t_size || t.y > (endR+1)*t_size) continue;
+        if (obj.x + r > t.x && obj.x - r < t.x + t_size && obj.y + r > t.y && obj.y - r < t.y + t_size) {
+            if(axis === 'x') {
+                if(obj.vx > 0) obj.x = t.x - r - 0.1;
+                if(obj.vx < 0) obj.x = t.x + t_size + r + 0.1;
+                obj.vx = 0;
+            } else {
+                if(obj.vy > 0) { 
+                    obj.y = t.y - r - 0.1; 
+                    if(obj === player) {
+                        obj.onGround = true;
+                        if(t.type === 'T') { obj.vy = BOUNCE_FORCE; obj.onGround = false; Sound.play('jump'); spawnParticles(obj.x, obj.y+10, '#ff9800', 8); } 
+                        else obj.vy = 0;
+                    } else obj.vy = 0; // Enemies don't use trampolines
+                } else if (obj.vy < 0) { obj.y = t.y + t_size + r + 0.1; obj.vy = 0; }
+            }
+        }
     }
+}
 
-    player.y += player.vy;
-    player.onGround = false;
-    checkTileCollision('y');
-
-    if(player.y > 500) killPlayer("You fell into the abyss!");
+function updateEntities() {
+    let currentMap = levels[currentLevelIndex];
 
     enemies.forEach(e => {
         if(!e.active) return;
-        if (e.type === 'h') {
-            e.x += e.vx;
-            if(e.x < e.min + 12 || e.x > e.max - 12) e.vx *= -1;
-        } else {
-            e.y += e.vy;
-            if(e.y < e.min || e.y > e.max) e.vy *= -1;
+        
+        // BOSS LOGIC
+        if(e.type === 'boss') {
+            e.radius = 18;
+            e.timer++;
+            // Simple AI: Move towards player, Jump if blocked or random
+            if(e.state === 'idle') {
+                let dx = player.x - e.x;
+                e.vx = dx > 0 ? 1.5 : -1.5;
+                if(Math.abs(dx) < 10) e.vx = 0;
+                // Ability: Magma Burst
+                if(e.timer > 150) { e.state = 'charge'; e.timer = 0; e.vx = 0; }
+            } else if (e.state === 'charge') {
+                if(e.timer > 40) {
+                    e.state = 'idle'; e.timer = 0;
+                    Sound.play('boss_shoot');
+                    // Shoot 3 bullets
+                    enemyBullets.push({x: e.x, y: e.y, vx: -3, vy: -1, life: 100});
+                    enemyBullets.push({x: e.x, y: e.y, vx: 3, vy: -1, life: 100});
+                    enemyBullets.push({x: e.x, y: e.y, vx: (player.x-e.x)*0.05, vy: -3, life: 100});
+                }
+            }
+            e.vy += GRAVITY;
+            e.x += e.vx; checkTileCollision('x', e);
+            e.y += e.vy; checkTileCollision('y', e);
+        }
+        else if(e.type === 'h') {
+            let lookAheadX = e.x + (e.vx * 15);
+            let mapR = Math.floor((e.y - 60) / TILE_SIZE);
+            let mapC = Math.floor(lookAheadX / TILE_SIZE);
+            let wallAhead = false, ledgeAhead = true;
+            if(mapR >= 0 && mapR < currentMap.length && mapC >= 0 && mapC < currentMap[0].length) {
+                let char = currentMap[mapR][mapC];
+                if(char === '#' || char === 'T') wallAhead = true;
+                let floorChar = (mapR+1 < currentMap.length) ? currentMap[mapR+1][mapC] : '.';
+                if(floorChar === '#' || floorChar === 'T') ledgeAhead = false;
+            }
+            if(wallAhead || ledgeAhead) e.vx *= -1;
+            e.x += e.vx; 
+        } else if (e.type === 'v') {
+            e.y += e.vy; if(e.y < e.minY || e.y > e.maxY) e.vy *= -1;
         }
         
+        // Collision with Player
         let dx = player.x - e.x, dy = player.y - e.y;
-        if(Math.sqrt(dx*dx + dy*dy) < 22) { 
-            if (player.vy > 0 && player.y < e.y - 5) {
-                e.active = false;
-                player.vy = -7; 
-                score += 50;
-                document.getElementById('scoreVal').innerText = score;
-                spawnParticles(e.x, e.y, '#8e24aa', 10); // Explosion
-            } else {
-                killPlayer("Touched an enemy!");
-            }
+        let dist = (e.type === 'boss') ? 30 : 20;
+        if(dx*dx + dy*dy < dist*dist) { 
+            if (player.vy > 0 && player.y < e.y - (e.type==='boss'?15:8)) { 
+                player.vy = -6; 
+                if(e.type === 'boss') {
+                    e.hp--; Sound.play('boss_hit'); spawnParticles(e.x, e.y, '#fff', 5);
+                    if(e.hp <= 0) { e.active = false; score += 500; spawnParticles(e.x, e.y, '#ab47bc', 50); }
+                } else {
+                    e.active = false; score += 50; Sound.play('enemy'); spawnParticles(e.x, e.y, '#ab47bc', 10);
+                }
+                document.getElementById('scoreVal').innerText = score; 
+            } else { killPlayer("Ouch! Enemy!"); }
         }
     });
 
     coins.forEach(c => {
         if(!c.active) return;
-        if((player.x-c.x)**2 + (player.y-c.y)**2 < 200) { 
-            c.active = false; score += 10;
-            document.getElementById('scoreVal').innerText = score;
-            spawnParticles(c.x, c.y, '#FFD700', 5); // Sparkle
-        }
+        if((player.x-c.x)**2 + (player.y-c.y)**2 < 250) { c.active = false; score += 10; Sound.play('coin'); document.getElementById('scoreVal').innerText = score; spawnParticles(c.x, c.y, '#FFD700', 5); }
     });
 
-    for(let s of spikes) {
-        if(player.x > s.x + 5 && player.x < s.x + 15 && player.y > s.y + 10 && player.y < s.y + 20) killPlayer("Spiked!");
-    }
-    for(let w of water) {
-        if (player.x + 5 > w.x && player.x - 5 < w.x + 20 && player.y + 9 > w.y && player.y - 9 < w.y + 20) killPlayer("You drowned!");
-    }
-    if(goal && (player.x - (goal.x+10))**2 + (player.y - (goal.y+20))**2 < 400) completeLevel();
-    
-    updateParticles();
-}
-
-function checkTileCollision(axis) {
-    let left = Math.floor((player.x - player.radius) / TILE_SIZE);
-    let right = Math.floor((player.x + player.radius) / TILE_SIZE);
-    let top = Math.floor((player.y - player.radius) / TILE_SIZE);
-    let bottom = Math.floor((player.y + player.radius + 10) / TILE_SIZE);
-
-    for(let t of tiles) {
-        // Optimization: only check tiles close to player
-        if(Math.abs(t.x - player.x) > 30 || Math.abs(t.y - player.y) > 30) continue;
-
-        if (player.x + player.radius > t.x && player.x - player.radius < t.x + TILE_SIZE &&
-            player.y + player.radius > t.y && player.y - player.radius < t.y + TILE_SIZE) {
-            
-            if(axis === 'x') {
-                if(player.vx > 0) player.x = t.x - player.radius - 0.1;
-                if(player.vx < 0) player.x = t.x + TILE_SIZE + player.radius + 0.1;
-                player.vx = 0;
-            } else {
-                if(player.vy > 0) { 
-                    player.y = t.y - player.radius - 0.1;
-                    player.onGround = true;
-                    player.vy = 0;
-                } else if (player.vy < 0) { 
-                    player.y = t.y + TILE_SIZE + player.radius + 0.1;
-                    player.vy = 0;
-                }
+    // Player Bullets
+    for(let i=bullets.length-1; i>=0; i--) {
+        let b = bullets[i]; b.x += b.vx; b.life--; 
+        if(b.life <= 0) { bullets.splice(i, 1); continue; }
+        let hit = false;
+        for(let e of enemies) {
+            if(!e.active) continue;
+            let dist = (e.type === 'boss') ? 30 : 15;
+            if((b.x-e.x)**2 + (b.y-e.y)**2 < dist*dist) {
+                 bullets.splice(i, 1); hit = true; 
+                 if(e.type === 'boss') {
+                     e.hp--; Sound.play('boss_hit'); spawnParticles(e.x, e.y, '#fff', 3);
+                     if(e.hp <= 0) { e.active = false; score += 500; spawnParticles(e.x, e.y, '#ab47bc', 50); }
+                 } else {
+                     e.active = false; score += 50; Sound.play('enemy'); spawnParticles(e.x, e.y, '#ab47bc', 10);
+                 }
+                 document.getElementById('scoreVal').innerText = score; break;
             }
         }
+        if(hit) continue;
+        for(let t of tiles) {
+            if(b.x > t.x && b.x < t.x+TILE_SIZE && b.y > t.y && b.y < t.y+TILE_SIZE) { spawnParticles(b.x, b.y, '#fff', 3); bullets.splice(i, 1); break; }
+        }
     }
+
+    // Enemy Bullets (Magma)
+    for(let i=enemyBullets.length-1; i>=0; i--) {
+        let b = enemyBullets[i]; b.x += b.vx; b.y += b.vy; b.life--;
+        b.vy += 0.1; // Gravity on magma
+        if(b.life <= 0) { enemyBullets.splice(i, 1); continue; }
+        if((b.x-player.x)**2 + (b.y-player.y)**2 < 200) killPlayer("Burned by Magma!");
+        for(let t of tiles) {
+            if(b.x > t.x && b.x < t.x+TILE_SIZE && b.y > t.y && b.y < t.y+TILE_SIZE) { spawnParticles(b.x, b.y, '#ff5722', 3); enemyBullets.splice(i, 1); break; }
+        }
+    }
+    
+    for(let i=particles.length-1; i>=0; i--) { let p = particles[i]; p.x += p.vx; p.y += p.vy; p.life -= 0.05; if(p.life <= 0) particles.splice(i, 1); }
+
+    for(let s of spikes) if(Math.abs(player.x - s.x) < 10 && Math.abs(player.y - s.y) < 15) killPlayer("Stepped on spike");
+    for(let w of water) if (player.x > w.x && player.x < w.x+20 && player.y > w.y+5) killPlayer("Fall on water");
+    if(goal && Math.abs(player.x - goal.x) < 20 && Math.abs(player.y - goal.y) < 30) completeLevel();
 }
 
 function killPlayer(reason) {
     if(player.dead) return;
-    player.dead = true;
-    player.vx = 0; player.vy = -5;
-    spawnParticles(player.x, player.y, '#ff3333', 15);
-    setTimeout(() => { showOverlay("GAME OVER", reason, "TRY AGAIN"); }, 800);
+    player.dead = true; player.vx = 0; player.vy = -5; Sound.play('die'); spawnParticles(player.x, player.y, '#ff3333', 15);
+    setTimeout(() => { showOverlay("TRY AGAIN!", reason, "RETRY"); }, 800);
 }
 
 function completeLevel() {
-    gameState = 'WIN_LEVEL';
+    gameState = 'WIN_LEVEL'; Sound.play('coin');
     if(currentLevelIndex >= levels.length - 1) {
-        showOverlay("VICTORY!", "You beat the game!<br>Final Score: " + score, "PLAY AGAIN");
+        showOverlay("VICTORY!", "You defeated the Dark King!<br>Score: " + score, "PLAY AGAIN");
         gameState = 'GAME_COMPLETE';
     } else {
-        showOverlay("CHAPTER CLEARED!", "Score: " + score, "NEXT CHAPTER");
+        showOverlay("LEVEL DONE!", "Great Work!", "NEXT LEVEL");
     }
 }
 
-// --- RENDER ---
 function draw() {
     globalTime++;
-    // Sky Gradient
-    let grad = ctx.createLinearGradient(0, 0, 0, canvas.height);
-    grad.addColorStop(0, '#4fc3f7'); grad.addColorStop(1, '#e1f5fe');
+    let colorTop = currentLevelIndex === 2 ? '#311b92' : (currentLevelIndex === 0 ? '#4fc3f7' : '#ff7043'); 
+    let colorBot = currentLevelIndex === 2 ? '#000000' : (currentLevelIndex === 0 ? '#e1f5fe' : '#ffccbc');
+    let grad = ctx.createLinearGradient(0, 0, 0, canvas.height); grad.addColorStop(0, colorTop); grad.addColorStop(1, colorBot);
     ctx.fillStyle = grad; ctx.fillRect(0, 0, canvas.width, canvas.height);
 
     if (gameState === 'MENU') return;
 
-    // Camera Logic
-    let targetX = player.x - canvas.width / 2;
-    if(targetX < 0) targetX = 0;
-    let mapWidth = levels[currentLevelIndex][0].length * TILE_SIZE;
-    if (targetX > mapWidth - canvas.width) targetX = mapWidth - canvas.width;
+    let targetX = player.x - canvas.width / 2; if(targetX < 0) targetX = 0;
+    let mapW = levels[currentLevelIndex][0].length * TILE_SIZE; if(targetX > mapW - canvas.width) targetX = mapW - canvas.width;
     camera.x += (targetX - camera.x) * 0.1;
 
-    // PARALLAX LAYER 1: Mountains (Slow)
-    ctx.save();
-    ctx.translate(-camera.x * 0.1, 50); // Moves at 10% speed
-    for(let i=0; i<10; i++) ctx.drawImage(mountainSprite, i * 380, 50);
+    ctx.save(); ctx.translate(-camera.x * 0.2, 0); ctx.fillStyle = 'rgba(255,255,255,0.6)';
+    for(let i=0; i<30; i++) { let cx = i * 250; let cy = 50 + Math.sin(i)*20; ctx.beginPath(); ctx.arc(cx, cy, 30, 0, Math.PI*2); ctx.arc(cx+40, cy+10, 35, 0, Math.PI*2); ctx.fill(); }
     ctx.restore();
 
-    // PARALLAX LAYER 2: Distant Trees/Clouds (Medium)
-    ctx.save();
-    ctx.translate(-camera.x * 0.5, 0); // Moves at 50% speed
-    ctx.fillStyle = 'rgba(255,255,255,0.6)';
-    for(let i=0; i<20; i++) {
-        ctx.beginPath(); ctx.arc(i*200, 50, 40, 0, Math.PI*2); ctx.fill(); // Clouds
-    }
-    ctx.restore();
-
-    // GAME LAYER
-    ctx.save();
-    ctx.translate(-Math.floor(camera.x), 0); 
-
-    tiles.forEach(t => {
-        if(t.x > camera.x - 30 && t.x < camera.x + 500) ctx.drawImage(tileSprite, t.x, t.y);
-    });
-
-    ctx.fillStyle = '#444';
-    spikes.forEach(s => {
-        if(s.x > camera.x - 30 && s.x < camera.x + 500) {
-            ctx.beginPath(); ctx.moveTo(s.x+2, s.y+20); ctx.lineTo(s.x+10, s.y+2); ctx.lineTo(s.x+18, s.y+20); ctx.fill();
-            ctx.fillStyle = '#888'; ctx.beginPath(); ctx.moveTo(s.x+10,s.y+2); ctx.lineTo(s.x+14,s.y+20); ctx.lineTo(s.x+6,s.y+20); ctx.fill(); ctx.fillStyle='#444';
-        }
-    });
+    ctx.save(); ctx.translate(-Math.floor(camera.x), 0); 
+    
+    tiles.forEach(t => { if(t.x > camera.x - 30 && t.x < camera.x + 500) { if(t.type === 'T') ctx.drawImage(bounceSprite, t.x, t.y); else ctx.drawImage(tileSprite, t.x, t.y); }});
+    decor.forEach(d => { if(d.x > camera.x - 30 && d.x < camera.x + 500) ctx.drawImage(flowerSprite, d.x, d.y); });
+    ctx.fillStyle = '#444'; spikes.forEach(s => { if(s.x > camera.x - 30 && s.x < camera.x + 500) { ctx.beginPath(); ctx.moveTo(s.x+2, s.y+20); ctx.lineTo(s.x+10, s.y+2); ctx.lineTo(s.x+18, s.y+20); ctx.fill(); } });
+    ctx.fillStyle = '#FFEB3B'; for(let b of bullets) { ctx.beginPath(); ctx.arc(b.x, b.y, 5, 0, Math.PI*2); ctx.fill(); }
+    
+    ctx.fillStyle = '#ff5722'; 
+    for(let b of enemyBullets) { ctx.beginPath(); ctx.arc(b.x, b.y, 6, 0, Math.PI*2); ctx.fill(); ctx.strokeStyle='white'; ctx.stroke(); }
 
     enemies.forEach(e => {
         if(e.active && e.x > camera.x - 30 && e.x < camera.x + 500) {
             ctx.save(); ctx.translate(e.x, e.y);
-            if(e.type === 'v') {
-                let flap = Math.sin(globalTime/2) * 3;
-                ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(-8, -5 + flap, 5, 0, Math.PI*2); ctx.fill(); ctx.beginPath(); ctx.arc(8, -5 + flap, 5, 0, Math.PI*2); ctx.fill(); 
-            } else { ctx.rotate(Math.sin(globalTime/5) * 0.1); }
-            ctx.drawImage(enemySprite, -12, -12); ctx.restore();
+            if(e.type === 'boss') {
+                if(e.state === 'charge') { 
+                    ctx.globalCompositeOperation = 'source-atop'; ctx.fillStyle = 'white'; 
+                    if(Math.floor(globalTime/4)%2===0) ctx.filter = 'invert(1)';
+                }
+                ctx.drawImage(bossSprite, -20, -20);
+                ctx.filter = 'none';
+                // Health Bar
+                ctx.fillStyle = 'red'; ctx.fillRect(-20, -35, 40, 5);
+                ctx.fillStyle = '#00e676'; ctx.fillRect(-20, -35, 40 * (e.hp/e.maxHp), 5);
+            } else if(e.type === 'h') {
+                ctx.rotate(Math.sin(globalTime/6)*0.2); ctx.drawImage(enemySprite, -12, -12);
+            } else { 
+                let flap = Math.sin(globalTime/3)*3; ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(-8, -5+flap, 4, 0, Math.PI*2); ctx.fill(); ctx.beginPath(); ctx.arc(8, -5+flap, 4, 0, Math.PI*2); ctx.fill(); ctx.drawImage(enemySprite, -12, -12);
+            }
+            ctx.restore();
         }
     });
 
@@ -499,83 +550,47 @@ function draw() {
 
     coins.forEach(c => {
         if(c.active && c.x > camera.x - 30 && c.x < camera.x + 500) {
-            ctx.fillStyle = '#FFD700'; ctx.strokeStyle = '#B8860B'; ctx.lineWidth = 2;
             let bounce = Math.sin(globalTime / 10) * 3;
-            ctx.beginPath(); ctx.arc(c.x, c.y + bounce, 6, 0, Math.PI*2); ctx.fill(); ctx.stroke();
-            ctx.fillStyle = '#FFF'; ctx.beginPath(); ctx.arc(c.x-2, c.y+bounce-2, 2, 0, Math.PI*2); ctx.fill();
+            ctx.fillStyle = '#FFD700'; ctx.beginPath(); ctx.arc(c.x, c.y + bounce, 7, 0, Math.PI*2); ctx.fill(); ctx.strokeStyle = '#fff'; ctx.lineWidth = 2; ctx.stroke();
         }
     });
 
-    // Player
     if(!player.dead) {
         ctx.save(); ctx.translate(player.x, player.y); ctx.rotate(player.angle);
         ctx.drawImage(ballSprite, -player.radius, -player.radius, player.radius*2, player.radius*2);
         ctx.restore();
     }
 
-    // Water Overlay (Drawn last for transparency)
     let wave = Math.sin(globalTime/15) * 2;
-    water.forEach(w => {
-        if(w.x > camera.x - 30 && w.x < camera.x + 500) ctx.drawImage(waterSprite, w.x, w.y + wave); 
-    });
-
-    // Particles
-    particles.forEach(p => {
-        ctx.fillStyle = p.color; ctx.globalAlpha = p.life;
-        ctx.fillRect(p.x, p.y, 3, 3);
-        ctx.globalAlpha = 1.0;
-    });
-
+    water.forEach(w => { if(w.x > camera.x - 30 && w.x < camera.x + 500) ctx.drawImage(waterSprite, w.x, w.y + wave); });
+    particles.forEach(p => { ctx.fillStyle = p.color; ctx.globalAlpha = p.life; ctx.fillRect(p.x, p.y, 4, 4); ctx.globalAlpha = 1.0; });
     ctx.restore();
 }
 
-function gameLoop() {
-    if(gameState === 'PLAY') updatePhysics();
-    draw();
-    requestAnimationFrame(gameLoop);
-}
+function gameLoop() { if(gameState === 'PLAY') updatePhysics(); draw(); requestAnimationFrame(gameLoop); }
 
-// --- UI ---
 function showOverlay(title, msg, btnText) {
     gameState = (gameState === 'GAME_COMPLETE' ? 'GAME_COMPLETE' : 'MENU');
-    document.getElementById('overlay-title').innerHTML = title;
-    document.getElementById('overlay-msg').innerHTML = msg;
-    document.getElementById('overlay-btn').innerText = btnText;
-    document.getElementById('overlay').style.display = 'flex';
+    document.getElementById('overlay-title').innerHTML = title; document.getElementById('overlay-msg').innerHTML = msg; document.getElementById('overlay-btn').innerText = btnText; document.getElementById('overlay').style.display = 'flex';
 }
-
 function handleOverlayClick() {
-    const btnText = document.getElementById('overlay-btn').innerText;
-    document.getElementById('overlay').style.display = 'none';
-    if(btnText === 'START ADVENTURE' || btnText === 'PLAY AGAIN') {
-        currentLevelIndex = 0; score = 0; document.getElementById('scoreVal').innerText = '0'; resetLevel();
-    } else if (btnText === 'TRY AGAIN') { resetLevel(); 
-    } else if (btnText === 'NEXT CHAPTER') { currentLevelIndex++; resetLevel(); }
+    Sound.init(); const btnText = document.getElementById('overlay-btn').innerText; document.getElementById('overlay').style.display = 'none';
+    if(btnText === 'LET\'S GO!' || btnText === 'PLAY AGAIN') { currentLevelIndex = 0; score = 0; document.getElementById('scoreVal').innerText = '0'; resetLevel(); } 
+    else if (btnText === 'RETRY') { resetLevel(); } else if (btnText === 'NEXT LEVEL') { currentLevelIndex++; resetLevel(); }
 }
-
 function resetLevel() {
     parseLevel(currentLevelIndex);
-    player.x = startPos.x; player.y = startPos.y; player.vx = 0; player.vy = 0; player.angle = 0; player.dead = false; player.onGround = false;
-    document.getElementById('levelDisplay').innerText = "CHAPTER " + (currentLevelIndex + 1);
-    gameState = 'PLAY';
+    player.x = startPos.x; player.y = startPos.y; player.vx = 0; player.vy = 0; player.angle = 0; player.dead = false; player.onGround = false; player.facing = 1;
+    document.getElementById('levelDisplay').innerText = "LEVEL " + (currentLevelIndex + 1); gameState = 'PLAY';
 }
 
-// --- INPUTS ---
-window.addEventListener('keydown', e => {
-    if(e.code === 'ArrowLeft') keys.left = true; if(e.code === 'ArrowRight') keys.right = true; if(e.code === 'ArrowUp' || e.code === 'Space') keys.up = true;
-});
-window.addEventListener('keyup', e => {
-    if(e.code === 'ArrowLeft') keys.left = false; if(e.code === 'ArrowRight') keys.right = false; if(e.code === 'ArrowUp' || e.code === 'Space') keys.up = false;
-});
-const addTouch = (id, k) => {
-    const el = document.getElementById(id);
-    el.addEventListener('touchstart', (e) => { e.preventDefault(); keys[k] = true; });
-    el.addEventListener('touchend', (e) => { e.preventDefault(); keys[k] = false; });
-};
+window.addEventListener('keydown', e => { if(e.code === 'ArrowLeft') keys.left = true; if(e.code === 'ArrowRight') keys.right = true; if(e.code === 'ArrowUp' || e.code === 'Space') keys.up = true; if(e.code === 'KeyZ') shoot(); });
+window.addEventListener('keyup', e => { if(e.code === 'ArrowLeft') keys.left = false; if(e.code === 'ArrowRight') keys.right = false; if(e.code === 'ArrowUp' || e.code === 'Space') keys.up = false; });
+const addTouch = (id, k) => { const el = document.getElementById(id); el.addEventListener('touchstart', (e) => { e.preventDefault(); keys[k] = true; }); el.addEventListener('touchend', (e) => { e.preventDefault(); keys[k] = false; }); };
 addTouch('btn-left', 'left'); addTouch('btn-right', 'right'); addTouch('btn-jump', 'up');
+document.getElementById('btn-shoot').addEventListener('touchstart', (e) => { e.preventDefault(); shoot(); });
 
-gameState = 'MENU';
-gameLoop();
+gameState = 'MENU'; gameLoop();
 
 </script>
 </body>
